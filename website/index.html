@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TODO</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        .show {
+          display: block;
+          }
+         .hide {
+         display: none;
+         }
+         .center {
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         }
+    </style>
+
+    <script type="text/javascript">
+      var logged_in = false
+      function login() {
+        logged_in = true
+        document.getElementById("payment-menu-button").classList.remove("hide");
+        document.getElementById("logout-menu-button").classList.remove("hide");
+        show_payment_info()
+      }
+      function logout() {
+        logged_in = true
+        document.getElementById("payment-menu-button").classList.add("hide");
+        document.getElementById("logout-menu-button").classList.add("hide");
+        //
+        document.getElementById("payment-info-container").classList.add("hide");
+        document.getElementById("faq-container").classList.add("hide");
+        document.getElementById("login-container").classList.remove("hide");
+      }
+      function show_faq() {
+        document.getElementById("payment-info-container").classList.add("hide");
+        document.getElementById("faq-container").classList.remove("hide");
+      }
+      function show_payment_info() {
+        document.getElementById("login-container").classList.add("hide");
+        document.getElementById("faq-container").classList.add("hide");
+        document.getElementById("payment-info-container").classList.remove("hide");
+      }
+    </script>
+
+</head>
+<body>
+
+<div style="overflow: hidden;height: 250px;">
+
+    <nav class="demo">
+        <ul class="brand">
+            <img class="logo" src="/img/basket.png"/>
+            <li><strong>Moto Moneys</strong></li>
+        </ul>
+
+        <ul>
+            <li><a href="#" onclick="show_payment_info()" class="button icon-picture hide" id="payment-menu-button">Payment Info</a></li>
+            <li><a href="#" onclick="show_faq()" class="button icon-picture" id="faq-menu-button">FAQ</a></li>
+            <li><a href="#" onclick="logout()" class="button icon-puzzle hide" id="logout-menu-button">Logout</a></li>
+        </ul>
+    </nav>
+
+</div>
+
+<main class="container">
+
+    <div id="login-container" class="show">
+        <div class="center">
+                        <span onclick="login()" class="btn btn-block btn-social btn-github center" role="button">
+            <i class="fa fa-github"></i> Sign in with GitHub
+        </span>
+        </div>
+    </div>
+
+    <div id="faq-container" class="hide">
+        <details>
+            <summary>What is Moto?</summary>
+            <p>an amazing library</p>
+        </details>
+
+        <details>
+            <summary>Why this website?</summary>
+            <p>the entire answer</p>
+        </details>
+
+    </div>
+
+    <div id="payment-info-container" class="hide">
+
+        <table role="grid">
+            <thead>
+            <tr>
+                <th scope="col">PR</th>
+                <th scope="col">Title</th>
+                <th scope="col">Date</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td scope="row">#1</td>
+                <td scope="row">Awesome bugfix</td>
+                <td scope="row">today</td>
+            </tr>
+            <tr>
+                <td scope="row">#2</td>
+                <td scope="row">Amazing feature</td>
+                <td scope="row">yesterday</td>
+            </tr>
+            </tbody>
+        </table>
+
+
+    </div>
+
+</main>
+
+
+</body>
+</html>
