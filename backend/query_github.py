@@ -29,6 +29,7 @@ class QueryGithub:
                       reviewDecision
                       number
                       title
+                      updatedAtsour 
                     }
                   }
                 }

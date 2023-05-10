@@ -9,11 +9,6 @@ resource "aws_dynamodb_table" "user-tokens" {
   }
 
   attribute {
-    name = "username"
-    type = "S"
-  }
-
-  attribute {
     name = "state"
     type = "S"
   }
@@ -30,18 +25,28 @@ resource "aws_dynamodb_table" "user-tokens" {
   }
 
   tags = {
-    Project        = "moneys"
+    Project        = "payments"
   }
 }
 
 
-resource pull_requests
+resource "aws_dynamodb_table" "pull-requests" {
+  name           = "PullRequests"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "username"
+  range_key      = "pr_nr"
 
-username
-title
-number
-approved
-merged
-money
-expense_received
-expense_accepted (NONE/TRUE/FALSE)
+  attribute {
+    name = "username"
+    type = "S"
+  }
+
+  attribute {
+    name = "pr_nr"
+    type = "S"
+  }
+
+  tags = {
+    Project        = "payments"
+  }
+}
