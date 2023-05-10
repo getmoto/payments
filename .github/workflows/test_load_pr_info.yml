@@ -33,7 +33,8 @@ jobs:
           mv provider.mock provider.tf
       - name: Run TF
         run: |
-          terraform apply -target=aws_dynamodb_table.pull-requests
+          terraform init
+          terraform apply -target=aws_dynamodb_table.pull-requests -auto-approve
       - name: Execute tests
         run: |
           echo "TODO"
