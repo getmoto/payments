@@ -15,6 +15,59 @@ data "aws_iam_policy_document" "lambda_assume_role_policy"{
   }
 }
 
+data "aws_iam_policy_document" "lambda_logging" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+
+    resources = ["arn:aws:logs:*:*:*"]
+  }
+}
+
+resource "aws_iam_policy" "lambda_logging" {
+  name        = "lambda_logging"
+  path        = "/"
+  description = "IAM policy for logging from a lambda"
+  policy      = data.aws_iam_policy_document.lambda_logging.json
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
+}
+
+data "aws_iam_policy_document" "lambda_dynamodb_access" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "dynamodb:Scan",
+      "dynamodb:GetItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:BatchWriteItem"
+    ]
+
+    resources = ["arn:aws:dynamodb:*:*:*"]
+  }
+}
+
+resource "aws_iam_policy" "lambda_dynamodb_access" {
+  name        = "lambda_dynamodb_access"
+  path        = "/"
+  description = "IAM policy for DynamoDB access"
+  policy      = data.aws_iam_policy_document.lambda_dynamodb_access.json
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_dynamodb_access" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_dynamodb_access.arn
+}
+
 resource "aws_iam_role" "lambda_role" {
   name = "lambda-lambdaRole"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
@@ -66,6 +119,13 @@ resource "aws_lambda_function" "lambda_function_load_pr_info" {
   runtime       = "python3.10"
   handler       = "load_pr_info.lambda_handler"
   timeout       = 600
+  environment {
+    variables = {
+      GITHUB_TOKEN = ""
+      PR_TABLE_NAME = aws_dynamodb_table.pull-requests.name
+      SCRIPT_INFO_TABLE_NAME = aws_dynamodb_table.script-execution-info.name
+    }
+  }
 }
 
 resource "random_uuid" "lambda_hash_auth" {
