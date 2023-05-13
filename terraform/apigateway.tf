@@ -1,3 +1,7 @@
+locals {
+  apigw_origin_id = "PaymentsAPIOrigin"
+}
+
 resource "aws_apigatewayv2_api" "payments-api" {
   name          = "payments-api"
   protocol_type = "HTTP"
@@ -31,6 +35,32 @@ resource "aws_apigatewayv2_route" "post_settings_route" {
   api_id    = aws_apigatewayv2_api.payments-api.id
   route_key = "POST /settings"
   target    = "integrations/${aws_apigatewayv2_integration.post_settings_route.id}"
+}
+
+resource "aws_apigatewayv2_integration" "login_route" {
+  api_id                 = aws_apigatewayv2_api.payments-api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.lambda_function_auth.arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "login_route" {
+  api_id    = aws_apigatewayv2_api.payments-api.id
+  route_key = "GET /login"
+  target    = "integrations/${aws_apigatewayv2_integration.login_route.id}"
+}
+
+resource "aws_apigatewayv2_integration" "logged_in_route" {
+  api_id                 = aws_apigatewayv2_api.payments-api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.lambda_function_auth.arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "logged_in_route" {
+  api_id    = aws_apigatewayv2_api.payments-api.id
+  route_key = "GET /logged_in"
+  target    = "integrations/${aws_apigatewayv2_integration.logged_in_route.id}"
 }
 
 resource "aws_apigatewayv2_stage" "default" {

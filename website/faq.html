@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Moto Payments - Login</title>
+    <title>Moto Payments - FAQ</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -19,14 +19,6 @@
          align-items: center;
          }
     </style>
-
-    <script type="text/javascript">
-      var logged_in = false
-      function login() {
-        window.location.href = '/login.html'
-      }
-
-    </script>
 
 </head>
 <body>
@@ -50,15 +42,21 @@
 
 <main class="container">
 
-    <div id="login-container" class="show">
-        <div class="center">
-            <span onclick="login()" class="btn btn-block btn-social btn-github center" role="button">
-                <i class="fa fa-github"></i> Sign in with GitHub
-            </span>
-        </div>
+    <div id="faq-container" class="hide">
+        <details>
+            <summary>What is Moto?</summary>
+            <p>an amazing library</p>
+        </details>
+
+        <details>
+            <summary>Why this website?</summary>
+            <p>the entire answer</p>
+        </details>
+
     </div>
 
 </main>
+
 
 </body>
 </html>

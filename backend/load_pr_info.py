@@ -14,12 +14,11 @@ dynamodb = boto3.client("dynamodb", "us-east-1")
 pr_table_name = os.getenv("PR_TABLE_NAME")
 script_info_table_name = os.getenv("SCRIPT_INFO_TABLE_NAME")
 
+ssm = boto3.client("ssm", "us-east-1")
+github_token = ssm.get_parameter(Name="/moto/payments/tokens/github", WithDecryption=True)["Parameter"]["Value"]
+
 
 def lambda_handler(event, context):
-    # Get from SecretsManager? that way we can keep the value permanently
-    github_token = os.getenv("GITHUB_TOKEN")
-    if not github_token:
-        raise Exception("Please supply a Github Token")
 
     existing_items = dynamodb.scan(
         TableName=pr_table_name,

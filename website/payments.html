@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Moto Payments - Login</title>
+    <title>Moto Payments</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -21,10 +21,18 @@
     </style>
 
     <script type="text/javascript">
-      var logged_in = false
-      function login() {
-        window.location.href = '/login.html'
-      }
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", "/api/pr_info");
+      xhr.send();
+      xhr.responseType = "json";
+      xhr.onload = () => {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          const data = xhr.response;
+          console.log(data);
+        } else {
+          console.log(`Error: ${xhr.status}`);
+        }
+      };
 
     </script>
 
@@ -50,12 +58,30 @@
 
 <main class="container">
 
-    <div id="login-container" class="show">
-        <div class="center">
-            <span onclick="login()" class="btn btn-block btn-social btn-github center" role="button">
-                <i class="fa fa-github"></i> Sign in with GitHub
-            </span>
-        </div>
+    <div id="payment-info-container" class="hide">
+
+        <table role="grid">
+            <thead>
+            <tr>
+                <th scope="col">PR</th>
+                <th scope="col">Title</th>
+                <th scope="col">Date</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td scope="row">#1</td>
+                <td scope="row">Awesome bugfix</td>
+                <td scope="row">today</td>
+            </tr>
+            <tr>
+                <td scope="row">#2</td>
+                <td scope="row">Amazing feature</td>
+                <td scope="row">yesterday</td>
+            </tr>
+            </tbody>
+        </table>
+
     </div>
 
 </main>

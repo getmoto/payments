@@ -1,4 +1,5 @@
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 locals {
     account_id = data.aws_caller_identity.current.account_id
@@ -26,7 +27,7 @@ data "aws_iam_policy_document" "allow_cloudfront_access_to_fe" {
       variable = "AWS:SourceArn"
 
       values = [
-        "arn:aws:cloudfront::${local.account_id}:distribution/aws_cloudfront_distribution.website-cloudfront.id"
+        "arn:aws:cloudfront::${local.account_id}:distribution/${aws_cloudfront_distribution.website-cloudfront.id}"
       ]
     }
   }

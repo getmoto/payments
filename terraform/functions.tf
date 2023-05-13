@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "lambda_assume_role_policy"{
     actions = ["sts:AssumeRole"]
     principals {
       type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
+      identifiers = ["lambda.amazonaws.com", "edgelambda.amazonaws.com"]
     }
   }
 }
@@ -41,7 +41,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   policy_arn = aws_iam_policy.lambda_logging.arn
 }
 
-data "aws_iam_policy_document" "lambda_dynamodb_access" {
+data "aws_iam_policy_document" "lambda_service_access" {
   statement {
     effect = "Allow"
 
@@ -54,18 +54,28 @@ data "aws_iam_policy_document" "lambda_dynamodb_access" {
 
     resources = ["arn:aws:dynamodb:*:*:*"]
   }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParameter"
+    ]
+
+    resources = ["*"]
+  }
 }
 
-resource "aws_iam_policy" "lambda_dynamodb_access" {
-  name        = "lambda_dynamodb_access"
+resource "aws_iam_policy" "lambda_service_access" {
+  name        = "lambda_service_access"
   path        = "/"
-  description = "IAM policy for DynamoDB access"
-  policy      = data.aws_iam_policy_document.lambda_dynamodb_access.json
+  description = "IAM policy detailing which services Lambda functions can access"
+  policy      = data.aws_iam_policy_document.lambda_service_access.json
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_dynamodb_access" {
+resource "aws_iam_role_policy_attachment" "lambda_service_access" {
   role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_dynamodb_access.arn
+  policy_arn = aws_iam_policy.lambda_service_access.arn
 }
 
 resource "aws_iam_role" "lambda_role" {
@@ -100,8 +110,7 @@ data "archive_file" "lambda_load-pr_package" {
   excludes   = [
     "__pycache__",
     "venv",
-    "authenticate.py",
-    "login.py",
+    "authentication.py",
     "requirements.txt",
     "user_area.py"
   ]
@@ -121,18 +130,21 @@ resource "aws_lambda_function" "lambda_function_load_pr_info" {
   timeout       = 60
   environment {
     variables = {
-      GITHUB_TOKEN = ""
       PR_TABLE_NAME = aws_dynamodb_table.pull-requests.name
       SCRIPT_INFO_TABLE_NAME = aws_dynamodb_table.script-execution-info.name
     }
   }
 }
 
+resource "aws_cloudwatch_log_group" "lambda_load_pr_info" {
+  name              = "/aws/lambda/LoadPullRequestInfo"
+  retention_in_days = 7
+}
+
 resource "random_uuid" "lambda_hash_auth" {
   keepers = {
   for filename in setunion(
-  fileset(var.lambda_root, "load_pr_info.py"),
-  fileset(var.lambda_root, "authenticate.py"),
+  fileset(var.lambda_root, "authentication.py"),
   fileset(var.lambda_root, "requirements.txt")
   ) :
   filename => filemd5("${var.lambda_root}/${filename}")
@@ -146,6 +158,7 @@ data "archive_file" "lambda_auth_package" {
     "venv",
     "load_pr_info.py",
     "query_github.py",
+    "cronjobs/export_tables",
     "requirements.txt"
   ]
 
@@ -159,9 +172,23 @@ resource "aws_lambda_function" "lambda_function_auth" {
   filename      = data.archive_file.lambda_auth_package.output_path
   source_code_hash = data.archive_file.lambda_auth_package.output_base64sha256
   role          = aws_iam_role.lambda_role.arn
-  runtime       = "python3.10"
-  handler       = "authenticate.lambda_handler"
+  runtime       = "python3.9"
+  handler       = "authentication.lambda_handler"
   timeout       = 5
+  publish       = true
+}
+
+resource "aws_cloudwatch_log_group" "lambda_auth" {
+  name              = "/aws/lambda/Auth"
+  retention_in_days = 7
+}
+
+resource "aws_lambda_permission" "authentication" {
+  statement_id  = "AllowAPIGatewayToAuthentication"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda_function_auth.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.payments-api.execution_arn}/*/*"
 }
 
 resource "random_uuid" "lambda_hash_user_area" {
@@ -189,6 +216,11 @@ resource "aws_lambda_function" "lambda_function_user_area" {
   runtime       = "python3.10"
   handler       = "user_area.lambda_handler"
   timeout       = 5
+}
+
+resource "aws_cloudwatch_log_group" "lambda_user_area" {
+  name              = "/aws/lambda/UserArea"
+  retention_in_days = 7
 }
 
 resource "aws_lambda_permission" "user_area" {

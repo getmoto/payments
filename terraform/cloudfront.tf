@@ -7,14 +7,22 @@ resource "aws_cloudfront_origin_access_control" "website" {
 }
 
 resource "aws_cloudfront_distribution" "website-cloudfront" {
-  # Disable for now, as creation takes a long time during testing
-  # Also re-enable the IAM policy document in data.tf
-  count             = 0
 
   origin {
     domain_name              = aws_s3_bucket.website-fe.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.website.id
     origin_id                = local.s3_origin_id
+  }
+
+  origin {
+    domain_name = "${aws_apigatewayv2_api.payments-api.id}.execute-api.${data.aws_region.current.name}.amazonaws.com"
+    origin_id   = local.apigw_origin_id
+    custom_origin_config {
+      http_port              = "80"
+      https_port             = "443"
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
   }
 
   enabled             = true
@@ -24,7 +32,7 @@ resource "aws_cloudfront_distribution" "website-cloudfront" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.website-logging.bucket_domain_name}"
+    bucket          = aws_s3_bucket.website-logging.bucket_domain_name
     prefix          = "cloudfront"
   }
 
@@ -47,6 +55,51 @@ resource "aws_cloudfront_distribution" "website-cloudfront" {
     min_ttl                = 0
     default_ttl            = 3600
     max_ttl                = 86400
+  }
+
+  # Login.html should redirect to our authentication Lambda
+  ordered_cache_behavior {
+    allowed_methods        = ["HEAD", "GET", "OPTIONS"]
+    cached_methods         = ["HEAD", "GET"]
+    path_pattern           = "login.html"
+    target_origin_id       = local.s3_origin_id
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl = 0
+    max_ttl = 0
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    lambda_function_association {
+      event_type = "viewer-request"
+      lambda_arn = aws_lambda_function.lambda_function_auth.qualified_arn
+    }
+  }
+
+  # Redirect to API Gateway
+  ordered_cache_behavior {
+    path_pattern     = "/api/*"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = local.apigw_origin_id
+
+    forwarded_values {
+      query_string = true
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
+    viewer_protocol_policy = "https-only"
   }
 
   price_class = "PriceClass_100"

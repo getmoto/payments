@@ -9,7 +9,7 @@ resource "aws_s3_bucket" "website-fe" {
 module "template_files" {
   source = "hashicorp/dir/template"
 
-  base_dir = "${path.module}/website"
+  base_dir = "${path.module}/../website"
 }
 
 resource "aws_s3_object" "website-fe-files" {

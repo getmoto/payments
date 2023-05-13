@@ -5,6 +5,7 @@
 # return pr's
 
 def lambda_handler(event, context):
-    if event["http"]["path"] == "/pr_info" and event["http"]["method"] == "GET":
-        pass
+    print(event)
+    if event["requestContext"]["http"]["path"] == "/api/pr_info" and event["requestContext"]["http"]["method"] == "GET":
+        return {"pr": "info"}
     return {"message": "Hi!"}
