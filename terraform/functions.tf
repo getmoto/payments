@@ -49,6 +49,7 @@ data "aws_iam_policy_document" "lambda_service_access" {
       "dynamodb:Scan",
       "dynamodb:GetItem",
       "dynamodb:UpdateItem",
+      "dynamodb:PutItem",
       "dynamodb:BatchWriteItem"
     ]
 
@@ -176,6 +177,14 @@ resource "aws_lambda_function" "lambda_function_auth" {
   handler       = "authentication.lambda_handler"
   timeout       = 5
   publish       = true
+}
+
+# Stored in SSM to avoid a cyclic dependency from CLoudFront and Lambda
+# TODO: Remove once we switch to a full (non-CF) domain
+resource "aws_ssm_parameter" "domain_name" {
+  name  = "/moto/payments/domain_name"
+  type  = "String"
+  value = aws_cloudfront_distribution.website-cloudfront.domain_name
 }
 
 resource "aws_cloudwatch_log_group" "lambda_auth" {

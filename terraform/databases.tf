@@ -13,6 +13,21 @@ resource "aws_dynamodb_table" "user-tokens" {
     type = "S"
   }
 
+  ttl {
+    attribute_name = "expiration"
+    enabled        = true
+  }
+
+  tags = {
+    Project        = "payments"
+  }
+}
+
+resource "aws_dynamodb_table" "oauth-state" {
+  name           = "OAuthState"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "state"
+
   attribute {
     name = "state"
     type = "S"
@@ -21,12 +36,6 @@ resource "aws_dynamodb_table" "user-tokens" {
   ttl {
     attribute_name = "expiration"
     enabled        = true
-  }
-
-  global_secondary_index {
-    name               = "OAuthState"
-    hash_key           = "state"
-    projection_type    = "KEYS_ONLY"
   }
 
   tags = {

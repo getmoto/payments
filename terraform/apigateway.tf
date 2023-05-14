@@ -2,6 +2,16 @@ locals {
   apigw_origin_id = "PaymentsAPIOrigin"
 }
 
+resource "aws_apigatewayv2_authorizer" "authorize_user_area" {
+  api_id                            = aws_apigatewayv2_api.payments-api.id
+  authorizer_type                   = "REQUEST"
+  authorizer_uri                    = aws_lambda_function.lambda_function_auth.invoke_arn
+  identity_sources                  = ["$request.header.Cookie"]
+  name                              = "example-authorizer"
+  authorizer_payload_format_version = "2.0"
+  enable_simple_responses           = true
+}
+
 resource "aws_apigatewayv2_api" "payments-api" {
   name          = "payments-api"
   protocol_type = "HTTP"
@@ -22,6 +32,8 @@ resource "aws_apigatewayv2_route" "get_pr_info_route" {
   api_id    = aws_apigatewayv2_api.payments-api.id
   route_key = "GET /pr_info"
   target    = "integrations/${aws_apigatewayv2_integration.get_pr_info_route.id}"
+  authorization_type = "CUSTOM"
+  authorizer_id = aws_apigatewayv2_authorizer.authorize_user_area.id
 }
 
 resource "aws_apigatewayv2_integration" "post_settings_route" {
@@ -65,7 +77,7 @@ resource "aws_apigatewayv2_route" "logged_in_route" {
 
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.payments-api.id
-  name        = "$default"
+  name        = "api"
   auto_deploy = true
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gateway_payments.arn
