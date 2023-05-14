@@ -7,5 +7,6 @@
 def lambda_handler(event, context):
     print(event)
     if event["requestContext"]["http"]["path"] == "/api/pr_info" and event["requestContext"]["http"]["method"] == "GET":
+        # event["requestContext"]["authorizer"]["lambda"]["username"]
         return {"pr": "info"}
     return {"message": "Hi!"}
