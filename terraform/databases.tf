@@ -98,4 +98,9 @@ resource "aws_dynamodb_table_item" "example" {
   "earliest_modify_date": {"S": "${local.half_year_ago}"}
 }
 ITEM
+
+  lifecycle {
+    ignore_changes = all
+  }
+
 }

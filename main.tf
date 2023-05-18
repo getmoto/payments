@@ -19,3 +19,7 @@ terraform {
 module "infrastructure" {
   source = "./terraform"
 }
+
+output "domain-name" {
+  value = module.infrastructure.domain_name
+}

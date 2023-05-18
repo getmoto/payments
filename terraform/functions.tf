@@ -50,7 +50,8 @@ data "aws_iam_policy_document" "lambda_service_access" {
       "dynamodb:GetItem",
       "dynamodb:UpdateItem",
       "dynamodb:PutItem",
-      "dynamodb:BatchWriteItem"
+      "dynamodb:BatchWriteItem",
+      "dynamodb:Query"
     ]
 
     resources = ["arn:aws:dynamodb:*:*:*"]

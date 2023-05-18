@@ -5,6 +5,7 @@
     <title>Moto Payments</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/spinner.css">
 
     <style>
         .show {
@@ -27,8 +28,10 @@
       xhr.responseType = "json";
       xhr.onload = () => {
         if (xhr.readyState == 4 && xhr.status == 200) {
-          const data = xhr.response;
-          console.log(data);
+          const prs = xhr.response;
+          document.getElementById("pr_table").classList.remove("hide");
+          prs.forEach((x, i) => document.getElementById("pr_table_body").innerHTML += "<tr><td scope='row'>" + x['pr_nr'] + "</td><td scope='row'>" + x['title'] + "</td><td scope='row'>" + x['last_updated'] + "</td></tr>");
+          document.getElementById("pr_table_spinner").classList.add("hide");
         } else {
           console.log(`Error: ${xhr.status}`);
         }
@@ -39,7 +42,7 @@
 </head>
 <body>
 
-<div style="overflow: hidden;height: 250px;">
+<div style="overflow: hidden;height: 50px;">
 
     <nav class="demo">
         <ul class="brand">
@@ -58,9 +61,13 @@
 
 <main class="container">
 
-    <div id="payment-info-container" class="hide">
+    <div style="margin-bottom: 2em"><h2>Pull Requests that you have submitted to Moto:</h2></div>
 
-        <table role="grid">
+    <div id="payment-info-container">
+
+        <div id="pr_table_spinner" class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+
+        <table id="pr_table" role="grid" class="hide">
             <thead>
             <tr>
                 <th scope="col">PR</th>
@@ -68,17 +75,8 @@
                 <th scope="col">Date</th>
             </tr>
             </thead>
-            <tbody>
-            <tr>
-                <td scope="row">#1</td>
-                <td scope="row">Awesome bugfix</td>
-                <td scope="row">today</td>
-            </tr>
-            <tr>
-                <td scope="row">#2</td>
-                <td scope="row">Amazing feature</td>
-                <td scope="row">yesterday</td>
-            </tr>
+            <tbody id="pr_table_body">
+
             </tbody>
         </table>
 

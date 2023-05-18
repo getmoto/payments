@@ -139,3 +139,7 @@ resource "aws_s3_bucket_acl" "website-logging" {
   acl    = "private"
   depends_on = [aws_s3_bucket_ownership_controls.website-logging]
 }
+
+output "domain_name" {
+  value = aws_cloudfront_distribution.website-cloudfront.domain_name
+}
