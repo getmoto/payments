@@ -57,30 +57,6 @@ resource "aws_cloudfront_distribution" "website-cloudfront" {
     max_ttl                = 86400
   }
 
-  # Login.html should redirect to our authentication Lambda
-  ordered_cache_behavior {
-    allowed_methods        = ["HEAD", "GET", "OPTIONS"]
-    cached_methods         = ["HEAD", "GET"]
-    path_pattern           = "login.html"
-    target_origin_id       = local.s3_origin_id
-    viewer_protocol_policy = "redirect-to-https"
-    min_ttl = 0
-    max_ttl = 0
-
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "none"
-      }
-    }
-
-    lambda_function_association {
-      event_type = "viewer-request"
-      lambda_arn = aws_lambda_function.lambda_function_auth.qualified_arn
-    }
-  }
-
   # Redirect to API Gateway
   ordered_cache_behavior {
     path_pattern     = "/api/*"

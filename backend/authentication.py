@@ -24,9 +24,8 @@ redirect_uri = f"https://{domain_name}/api/logged_in"
 
 def lambda_handler(event, context):
     path, method = get_path_method(event)
-    if path == "/login.html" and method == "GET":
-        cf_record = event["Records"][0]["cf"]
-        request_id = cf_record["config"]["requestId"]
+    if path == "/api/login" and method == "GET":
+        request_id = event["requestContext"]["requestId"]
 
         state = base64.b64encode((request_id + str(uuid4())).encode("utf-8")).decode("utf-8")
         expires = str(int(time() + (60 * 60)))  # one hour from now
@@ -41,13 +40,9 @@ def lambda_handler(event, context):
         )
 
         return {
-            "status": "302",
-            "statusDescription": "Found",
+            "statusCode": "302",
             "headers": {
-                "location": [{
-                    "key": 'Location',
-                    "value": f'https://github.com/login/oauth/authorize?client_id={github_client_id}&redirect_uri={redirect_uri}&login=false&state={state}&allow_signup=false',
-                }],
+                "location": f"https://github.com/login/oauth/authorize?client_id={github_client_id}&redirect_uri={redirect_uri}&login=false&state={state}&allow_signup=false",
             }
         }
 
@@ -82,7 +77,9 @@ def lambda_handler(event, context):
         }
 
     if path == "/api/pr_info" and method == "GET":
-        # AUTHORIZE access
+        # AUTHORIZER
+        #
+        # The actual logic is handled by user_area.py - here we just verify whether the user has access
         token = event["identitySource"][0].split("token=")[-1]
         resp = http.request(
             "GET",
@@ -104,16 +101,6 @@ def lambda_handler(event, context):
     }
 
 def get_path_method(event):
-    try:
-        # Lambda@Edge - CloudFront event
-        cf_record = event["Records"][0]["cf"]
-
-        path = cf_record["request"]["uri"]
-        method = cf_record["request"]["method"]
-        return path, method
-    except:
-        pass
-
     try:
         # API Gateway request
         path = event["requestContext"]["http"]["path"]

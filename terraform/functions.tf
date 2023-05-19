@@ -177,7 +177,6 @@ resource "aws_lambda_function" "lambda_function_auth" {
   runtime       = "python3.9"
   handler       = "authentication.lambda_handler"
   timeout       = 5
-  publish       = true
 }
 
 # Stored in SSM to avoid a cyclic dependency from CLoudFront and Lambda
