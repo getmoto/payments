@@ -52,9 +52,10 @@ resource "aws_cloudfront_distribution" "website-cloudfront" {
     }
 
     viewer_protocol_policy = "redirect-to-https"
+    # Testing
     min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
+    default_ttl            = 10
+    max_ttl                = 10
   }
 
   # Redirect to API Gateway

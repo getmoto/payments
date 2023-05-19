@@ -5,7 +5,7 @@
     <title>Moto Payments</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="css/spinner.css">
+    <link rel="stylesheet" href="css/tabs.css">
 
     <style>
         .show {
@@ -19,6 +19,7 @@
          justify-content: center;
          align-items: center;
          }
+
     </style>
 
     <script type="text/javascript">
@@ -26,9 +27,27 @@
       xhr.open("GET", "/api/pr_info");
       xhr.send();
       xhr.responseType = "json";
+
       xhr.onload = () => {
         if (xhr.readyState == 4 && xhr.status == 200) {
           const prs = xhr.response;
+          // Show payment data
+          document.getElementById("payments_table").classList.remove("hide");
+          for (const x of prs) {
+              if ("payment" in x) {
+                  requested_class = x['payment']['requested'] ? "check_yes" : "check_no";
+                  approved_class = x['payment']['approved'] ? "check_yes" : "check_no";
+                  document.getElementById("payments_table_body").innerHTML += "<tr>" +
+                  "<td scope='row'>" + x['pr_nr'] + "</td>" +
+                  "<td scope='row'>" + x['title'] + "</td>" +
+                  "<td scope='row'>" + x['last_updated'] + "</td>" +
+                  "<td scope='row'>" + x['payment']['assigned'] + "</td>" +
+                  "<td scope='row'><div class='" + requested_class + "'></div></td>" +
+                  "<td scope='row'><div class='" + approved_class + "'></div></td></tr>";
+              }
+          }
+          document.getElementById("payments_table_spinner").classList.add("hide");
+          // Show PR data
           document.getElementById("pr_table").classList.remove("hide");
           prs.forEach((x, i) => document.getElementById("pr_table_body").innerHTML += "<tr><td scope='row'>" + x['pr_nr'] + "</td><td scope='row'>" + x['title'] + "</td><td scope='row'>" + x['last_updated'] + "</td></tr>");
           document.getElementById("pr_table_spinner").classList.add("hide");
@@ -36,6 +55,7 @@
           console.log(`Error: ${xhr.status}`);
         }
       };
+
 
     </script>
 
@@ -61,24 +81,58 @@
 
 <main class="container">
 
-    <div style="margin-bottom: 2em"><h2>Pull Requests that you have submitted to Moto:</h2></div>
+    <div class="tabs">
+        <input type="radio" name="tabs" id="tabone" checked="checked">
+        <label for="tabone">Payments</label>
+        <div class="tab">
+            <div style="margin: 2em 0">A list of all outstanding and approved payments</div>
 
-    <div id="payment-info-container">
+            <div>
+                <div id="payments_table_spinner" aria-busy="true"></div>
+                <table id="payments_table" role="grid" class="hide">
+                    <thead>
+                    <tr>
+                        <th scope="col">PR</th>
+                        <th scope="col">Title</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Assigned</th>
+                        <th scope="col">Requested</th>
+                        <th scope="col">Approved</th>
+                    </tr>
+                    </thead>
+                    <tbody id="payments_table_body">
 
-        <div id="pr_table_spinner" class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                    </tbody>
+                </table>
+            </div>
 
-        <table id="pr_table" role="grid" class="hide">
-            <thead>
-            <tr>
-                <th scope="col">PR</th>
-                <th scope="col">Title</th>
-                <th scope="col">Date</th>
-            </tr>
-            </thead>
-            <tbody id="pr_table_body">
+        </div>
 
-            </tbody>
-        </table>
+        <input type="radio" name="tabs" id="tabtwo">
+        <label for="tabtwo">Pull Requests</label>
+        <div class="tab">
+
+            <div style="margin: 2em 0">A list of all PR's you've submitted to Moto</div>
+
+            <div id="payment-info-container">
+
+                <div id="pr_table_spinner" aria-busy="true"></div>
+
+                <table id="pr_table" role="grid" class="hide">
+                    <thead>
+                    <tr>
+                        <th scope="col">PR</th>
+                        <th scope="col">Title</th>
+                        <th scope="col">Date</th>
+                    </tr>
+                    </thead>
+                    <tbody id="pr_table_body">
+
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
 
     </div>
 
