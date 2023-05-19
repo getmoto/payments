@@ -153,3 +153,52 @@ cf_viewer_request_event = {
         }
     ]
 }
+
+dynamodb_records = {
+    "Records": [
+        {
+            "eventID": "0e35235fa66bef9ff61f1c22293c81f0",
+            "eventName": "MODIFY",
+            "eventVersion": "1.1",
+            "eventSource": "aws:dynamodb",
+            "awsRegion": "us-east-1",
+            "dynamodb": {
+                "ApproximateCreationDateTime": 1684532421.0,
+                "Keys": {"pr_nr": {"N": "6312"}, "username": {"S": "bblommers"}},
+                "NewImage": {
+                    "st": {"S": "uff"},
+                    "last_updated": {"S": "2023-05-11T23:12:00Z"},
+                    "review": {"S": ""},
+                    "isDraft": {"BOOL": False},
+                    "merged": {"BOOL": True},
+                    "closed": {"BOOL": True},
+                    "id": {"S": "PR_kwDOAH5NfM5QORGr"},
+                    "state": {"S": "MERGED"},
+                    "title": {
+                        "S": "SNS: Allow Topic without properties to be deleted using CF"
+                    },
+                    "pr_nr": {"N": "6312"},
+                    "username": {"S": "bblommers"},
+                },
+                "OldImage": {
+                    "last_updated": {"S": "2023-05-11T23:12:00Z"},
+                    "review": {"S": ""},
+                    "isDraft": {"BOOL": False},
+                    "merged": {"BOOL": True},
+                    "closed": {"BOOL": True},
+                    "id": {"S": "PR_kwDOAH5NfM5QORGr"},
+                    "state": {"S": "MERGED"},
+                    "title": {
+                        "S": "SNS: Allow Topic without properties to be deleted using CF"
+                    },
+                    "pr_nr": {"N": "6312"},
+                    "username": {"S": "bblommers"},
+                },
+                "SequenceNumber": "22283300000000009849036471",
+                "SizeBytes": 390,
+                "StreamViewType": "NEW_AND_OLD_IMAGES",
+            },
+            "eventSourceARN": "arn:aws:dynamodb:us-east-1:193347341732:table/PullRequests/stream/2023-05-19T21:35:03.095",
+        }
+    ]
+}

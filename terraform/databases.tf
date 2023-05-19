@@ -48,6 +48,8 @@ resource "aws_dynamodb_table" "pull-requests" {
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "username"
   range_key      = "pr_nr"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
     name = "username"
@@ -103,4 +105,18 @@ ITEM
     ignore_changes = all
   }
 
+}
+
+resource "aws_s3_bucket" "website-backup" {
+  bucket = "moto-payments-website-backup"
+
+  tags = {
+    Project     = "payments"
+  }
+}
+
+resource "aws_lambda_event_source_mapping" "pr_table_backup" {
+  event_source_arn  = aws_dynamodb_table.pull-requests.stream_arn
+  function_name     = aws_lambda_function.pr_info_backup.arn
+  starting_position = "LATEST"
 }

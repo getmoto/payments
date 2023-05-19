@@ -239,3 +239,74 @@ resource "aws_lambda_permission" "user_area" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.payments-api.execution_arn}/*/*"
 }
+
+resource "aws_lambda_function" "pr_info_backup" {
+  function_name    = "PullRequestTableBackup"
+  filename         = data.archive_file.pr_info_backup_files.output_path
+  source_code_hash = data.archive_file.pr_info_backup_files.output_base64sha256
+  handler          = "backup_pr_data.handler"
+  role             = aws_iam_role.lambda_assume_role.arn
+  runtime          = "python3.8"
+}
+
+data "archive_file" "pr_info_backup_files" {
+  output_path = "lambda_zips/pr_info_backup_files.zip"
+  source_file = "${var.lambda_root}/backup_pr_data.py"
+  type        = "zip"
+}
+
+resource "aws_iam_role" "lambda_assume_role" {
+  name               = "lambda-dynamodb-role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": "LambdaAssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "dynamodb_read_log_policy" {
+  name   = "lambda-dynamodb-log-policy"
+  role   = aws_iam_role.lambda_assume_role.id
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+        "Action": [ "logs:*" ],
+        "Effect": "Allow",
+        "Resource": [ "arn:aws:logs:*:*:*" ]
+    },
+    {
+        "Action": [ "dynamodb:BatchGetItem",
+                    "dynamodb:GetItem",
+                    "dynamodb:GetRecords",
+                    "dynamodb:Scan",
+                    "dynamodb:Query",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:DescribeStream",
+                    "dynamodb:ListStreams" ],
+        "Effect": "Allow",
+        "Resource": [
+          "${aws_dynamodb_table.pull-requests.arn}",
+          "${aws_dynamodb_table.pull-requests.arn}/*"
+        ]
+    },
+    {
+        "Action": [ "s3:PutObject"],
+        "Effect": "Allow",
+        "Resource": ["*"]
+    }
+  ]
+}
+EOF
+}
