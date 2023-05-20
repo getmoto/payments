@@ -47,6 +47,8 @@ resource "aws_apigatewayv2_route" "post_settings_route" {
   api_id    = aws_apigatewayv2_api.payments-api.id
   route_key = "POST /settings"
   target    = "integrations/${aws_apigatewayv2_integration.post_settings_route.id}"
+  authorization_type = "CUSTOM"
+  authorizer_id = aws_apigatewayv2_authorizer.authorize_user_area.id
 }
 
 resource "aws_apigatewayv2_integration" "login_route" {

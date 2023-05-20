@@ -4,18 +4,13 @@ locals {
 }
 
 resource "aws_dynamodb_table" "user-tokens" {
-  name           = "UserTokens"
+  name           = "UserSettings"
   billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "access_token"
+  hash_key       = "username"
 
   attribute {
-    name = "access_token"
+    name = "username"
     type = "S"
-  }
-
-  ttl {
-    attribute_name = "expiration"
-    enabled        = true
   }
 
   tags = {

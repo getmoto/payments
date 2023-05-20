@@ -1,22 +1,46 @@
 import boto3
+import json
 from boto3.dynamodb.conditions import Key
 
 
 dynamodb = boto3.resource("dynamodb", "us-east-1")
-table = dynamodb.Table("PullRequests")
+pr_table = dynamodb.Table("PullRequests")
+user_table = dynamodb.Table("UserSettings")
 
 
 
 def lambda_handler(event, context):
     print(event)
-    if event["requestContext"]["http"]["path"] == "/api/pr_info" and event["requestContext"]["http"]["method"] == "GET":
+    path, method = get_path_method(event)
+    if path == "/api/pr_info" and method == "GET":
         username = event["requestContext"]["authorizer"]["lambda"]["username"]
         # Appropriate error when not logged in
         # FE Redirect when not logged in
-        items = table.query(
+        items = pr_table.query(
             IndexName="query_on_date",
             ScanIndexForward=False,
             KeyConditionExpression=Key("username").eq(username)
         )["Items"]
-        return items
+        oc_user = user_table.get_item(Key={"username": username}, ProjectionExpression="oc_username").get("Item", {}).get("oc_username")
+        return {"prs": items, "oc": oc_user}
+
+    if path == "/api/settings" and method == "POST":
+        username = event["requestContext"]["authorizer"]["lambda"]["username"]
+        oc_username = json.loads(event["body"])["oc_username"]
+        user_table.put_item(
+            Item={"username": username, "oc_username": oc_username}
+        )
+        return {}
+
     return {"message": "Hi!"}
+
+def get_path_method(event):
+    try:
+        # API Gateway request
+        path = event["requestContext"]["http"]["path"]
+        method = event["requestContext"]["http"]["method"]
+        return path, method
+    except:
+        pass
+
+    return None, None

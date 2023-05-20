@@ -8,7 +8,6 @@ import urllib3
 from time import time
 from uuid import uuid4
 
-tokens_table_name = "UserTokens"
 state_table_name = "OAuthState"
 
 ssm = boto3.client("ssm", "us-east-1")

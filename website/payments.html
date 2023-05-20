@@ -23,44 +23,65 @@
     </style>
 
     <script type="text/javascript">
-      const xhr = new XMLHttpRequest();
-      xhr.open("GET", "/api/pr_info");
-      xhr.send();
-      xhr.responseType = "json";
+        function get_pr_info() {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "/api/pr_info");
+            xhr.send();
+            xhr.responseType = "json";
 
-      xhr.onload = () => {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-          const prs = xhr.response;
-          // Show payment data
-          document.getElementById("payments_table").classList.remove("hide");
-          for (const x of prs) {
-              if ("payment" in x) {
-                  requested_class = x['payment']['requested'] ? "check_yes" : "check_no";
-                  approved_class = x['payment']['approved'] ? "check_yes" : "check_no";
-                  document.getElementById("payments_table_body").innerHTML += "<tr>" +
-                  "<td scope='row'>" + x['pr_nr'] + "</td>" +
-                  "<td scope='row'>" + x['title'] + "</td>" +
-                  "<td scope='row'>" + x['last_updated'] + "</td>" +
-                  "<td scope='row'>" + x['payment']['assigned'] + "</td>" +
-                  "<td scope='row'><div class='" + requested_class + "'></div></td>" +
-                  "<td scope='row'><div class='" + approved_class + "'></div></td></tr>";
-              }
-          }
-          document.getElementById("payments_table_spinner").classList.add("hide");
-          // Show PR data
-          document.getElementById("pr_table").classList.remove("hide");
-          prs.forEach((x, i) => document.getElementById("pr_table_body").innerHTML += "<tr><td scope='row'>" + x['pr_nr'] + "</td><td scope='row'>" + x['title'] + "</td><td scope='row'>" + x['last_updated'] + "</td></tr>");
-          document.getElementById("pr_table_spinner").classList.add("hide");
-        } else {
-          console.log(`Error: ${xhr.status}`);
+            xhr.onload = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                  const prs = xhr.response["prs"];
+                  if (xhr.response["oc"]) {
+                      document.getElementById("oc_username").value = xhr.response["oc"]
+                  }
+                  // Show payment data
+                  document.getElementById("payments_table").classList.remove("hide");
+                  for (const x of prs) {
+                      if ("payment" in x) {
+                          requested_class = x['payment']['requested'] ? "check_yes" : "check_no";
+                          approved_class = x['payment']['approved'] ? "check_yes" : "check_no";
+                          document.getElementById("payments_table_body").innerHTML += "<tr>" +
+                          "<td scope='row'>" + x['pr_nr'] + "</td>" +
+                          "<td scope='row'>" + x['title'] + "</td>" +
+                          "<td scope='row'>" + x['last_updated'] + "</td>" +
+                          "<td scope='row'>" + x['payment']['assigned'] + "</td>" +
+                          "<td scope='row'><div class='" + requested_class + "'></div></td>" +
+                          "<td scope='row'><div class='" + approved_class + "'></div></td></tr>";
+                      }
+                  }
+                  document.getElementById("payments_table_spinner").classList.add("hide");
+                  // Show PR data
+                  document.getElementById("pr_table").classList.remove("hide");
+                  prs.forEach((x, i) => document.getElementById("pr_table_body").innerHTML += "<tr><td scope='row'>" + x['pr_nr'] + "</td><td scope='row'>" + x['title'] + "</td><td scope='row'>" + x['last_updated'] + "</td></tr>");
+                  document.getElementById("pr_table_spinner").classList.add("hide");
+                } else {
+                  console.log(`Error: ${xhr.status}`);
+                }
+            };
         }
-      };
 
+        function store_username() {
+            document.getElementById("oc_username_save").setAttribute("disabled", null);
+            document.getElementById("oc_username_save").setAttribute("aria-busy", "true");
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/api/settings");
+            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xhr.send(JSON.stringify({"oc_username": document.getElementById("oc_username").value}));
+
+            xhr.onload = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    document.getElementById("oc_username_save").removeAttribute("disabled");
+                    document.getElementById("oc_username_save").setAttribute("aria-busy", "false");
+                }
+            }
+        }
 
     </script>
 
 </head>
-<body>
+<body onload="get_pr_info()">
 
 <div style="overflow: hidden;height: 50px;">
 
@@ -79,13 +100,24 @@
 
 </div>
 
-<main class="container">
+<main class="container" id="main_container">
 
     <div class="tabs">
         <input type="radio" name="tabs" id="tabone" checked="checked">
         <label for="tabone">Payments</label>
         <div class="tab">
-            <div style="margin: 2em 0">A list of all outstanding and approved payments</div>
+
+            <form action="javascript:store_username()">
+                <label for="oc_username">
+                    Only payments coming from the following OpenCollective username will be approved:
+                </label>
+                <div style="margin: 2em 0" class="grid">
+                    <input value="" name="username" id="oc_username" required>
+                    <button type="submit" id="oc_username_save">Save</button>
+                </div>
+            </form>
+
+            <div style="margin: 2em 0">Outstanding and approved payments:</div>
 
             <div>
                 <div id="payments_table_spinner" aria-busy="true"></div>
@@ -112,7 +144,7 @@
         <label for="tabtwo">Pull Requests</label>
         <div class="tab">
 
-            <div style="margin: 2em 0">A list of all PR's you've submitted to Moto</div>
+            <div style="margin: 2em 0">All PR's you've submitted to Moto:</div>
 
             <div id="payment-info-container">
 
