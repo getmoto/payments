@@ -32,29 +32,36 @@
             xhr.onload = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                   const prs = xhr.response["prs"];
+                  document.getElementById("pr_table").classList.remove("hide");
+                  prs.forEach((x, i) => document.getElementById("pr_table_body").innerHTML += "<tr><td scope='row'>" + x['pr_nr'] + "</td><td scope='row'>" + x['title'] + "</td><td scope='row'>" + x['last_updated'] + "</td></tr>");
+                  document.getElementById("pr_table_spinner").classList.add("hide");
+                } else {
+                  console.log(`Error: ${xhr.status}`);
+                }
+            };
+        }
+
+        function get_payment_info() {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "/api/payment_info");
+            xhr.send();
+            xhr.responseType = "json";
+
+            xhr.onload = () => {
+                get_pr_info();
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                  const payments = xhr.response["payments"];
                   if (xhr.response["oc"]) {
                       document.getElementById("oc_username").value = xhr.response["oc"]
                   }
                   // Show payment data
-                  document.getElementById("payments_table").classList.remove("hide");
-                  for (const x of prs) {
-                      if ("payment" in x) {
-                          requested_class = x['payment']['requested'] ? "check_yes" : "check_no";
-                          approved_class = x['payment']['approved'] ? "check_yes" : "check_no";
-                          document.getElementById("payments_table_body").innerHTML += "<tr>" +
-                          "<td scope='row'>" + x['pr_nr'] + "</td>" +
-                          "<td scope='row'>" + x['title'] + "</td>" +
-                          "<td scope='row'>" + x['last_updated'] + "</td>" +
-                          "<td scope='row'>" + x['payment']['assigned'] + "</td>" +
-                          "<td scope='row'><div class='" + requested_class + "'></div></td>" +
-                          "<td scope='row'><div class='" + approved_class + "'></div></td></tr>";
-                      }
+                  if (payments.length == 0) {
+                      document.getElementById("block_no_payments").classList.remove("hide");
+                  } else {
+                      payments.forEach((x, i) => document.getElementById("payment_rows").innerHTML += "<tr><td scope='row'>" + x['amount'] + "</td><td scope='row'><pre>" + x['details'] + "</pre></td></tr>");
+                      document.getElementById("block_payments").classList.remove("hide");
                   }
-                  document.getElementById("payments_table_spinner").classList.add("hide");
-                  // Show PR data
-                  document.getElementById("pr_table").classList.remove("hide");
-                  prs.forEach((x, i) => document.getElementById("pr_table_body").innerHTML += "<tr><td scope='row'>" + x['pr_nr'] + "</td><td scope='row'>" + x['title'] + "</td><td scope='row'>" + x['last_updated'] + "</td></tr>");
-                  document.getElementById("pr_table_spinner").classList.add("hide");
+                  document.getElementById("payments_wait").classList.add("hide");
                 } else {
                   console.log(`Error: ${xhr.status}`);
                 }
@@ -78,10 +85,14 @@
             }
         }
 
+        function load_all() {
+            get_payment_info();
+        }
+
     </script>
 
 </head>
-<body onload="get_pr_info()">
+<body onload="load_all()">
 
 <div style="overflow: hidden;height: 50px;">
 
@@ -107,35 +118,50 @@
         <label for="tabone">Payments</label>
         <div class="tab">
 
-            <form action="javascript:store_username()">
-                <label for="oc_username">
-                    Only payments coming from the following OpenCollective username will be approved:
-                </label>
-                <div style="margin: 2em 0" class="grid">
-                    <input value="" name="username" id="oc_username" required>
-                    <button type="submit" id="oc_username_save">Save</button>
-                </div>
-            </form>
+            <div id="payments_wait" aria-busy="true"></div>
 
-            <div style="margin: 2em 0">Outstanding and approved payments:</div>
+            <div id="block_no_payments" class="hide">
+                <p>There are no PR's eligible for payments at the moment.</p>
+            </div>
 
-            <div>
-                <div id="payments_table_spinner" aria-busy="true"></div>
-                <table id="payments_table" role="grid" class="hide">
-                    <thead>
-                    <tr>
-                        <th scope="col">PR</th>
-                        <th scope="col">Title</th>
-                        <th scope="col">Date</th>
-                        <th scope="col">Assigned</th>
-                        <th scope="col">Requested</th>
-                        <th scope="col">Approved</th>
-                    </tr>
-                    </thead>
-                    <tbody id="payments_table_body">
+            <div id="block_payments" class="hide">
 
-                    </tbody>
-                </table>
+                <p>Thank you for contributing to Moto!</p>
+                <p>To show our thanks, we'd like to share some of the donations that we've received with you. The PR's that you've submitted are a big reason that Moto is as successful as it is - so it's only fair that you share in the spoils.</p>
+
+                <p>To receive your share, please create an expense against our <a href="https://opencollective.com/moto">OpenCollective account</a>.</p>
+
+                <p>
+                    When creating an expense, please use the following information:
+                    <table>
+                        <thead>
+                            <tr>
+                              <th scope="col">Amount</th>
+                              <th scope="col">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payment_rows">
+
+                        </tbody>
+                    </table>
+                </p>
+
+                <hr/>
+
+                <form action="javascript:store_username()">
+                    <span>
+                        Only payments coming from the following OpenCollective username will be approved:
+                    </span>
+                    <div style="margin: 2em 0" class="grid">
+                        <input value="" name="username" id="oc_username" required>
+                        <button type="submit" id="oc_username_save">Save</button>
+                    </div>
+                </form>
+
+                <p>
+                    Any questions? Please see <a href="faq.html">our FAQ</a>.
+                </p>
+
             </div>
 
         </div>

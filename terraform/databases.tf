@@ -3,7 +3,7 @@ locals {
   half_year_ago         = formatdate("YYYY-MM-DD", timeadd(local.current_time, "-4320h")) # 6 months ago
 }
 
-resource "aws_dynamodb_table" "user-tokens" {
+resource "aws_dynamodb_table" "user-settings" {
   name           = "UserSettings"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "username"
@@ -43,8 +43,6 @@ resource "aws_dynamodb_table" "pull-requests" {
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "username"
   range_key      = "pr_nr"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
     name = "username"
@@ -67,6 +65,29 @@ resource "aws_dynamodb_table" "pull-requests" {
     name            = "query_on_date"
     projection_type = "ALL"
     range_key       = "last_updated"
+  }
+
+  tags = {
+    Project        = "payments"
+  }
+}
+
+resource "aws_dynamodb_table" "payment-info" {
+  name           = "Payments"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "username"
+  range_key      = "date_created"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "username"
+    type = "S"
+  }
+
+  attribute {
+    name = "date_created"
+    type = "S"
   }
 
   tags = {
@@ -111,7 +132,7 @@ resource "aws_s3_bucket" "website-backup" {
 }
 
 resource "aws_lambda_event_source_mapping" "pr_table_backup" {
-  event_source_arn  = aws_dynamodb_table.pull-requests.stream_arn
-  function_name     = aws_lambda_function.pr_info_backup.arn
+  event_source_arn  = aws_dynamodb_table.payment-info.stream_arn
+  function_name     = aws_lambda_function.payments_info_backup.arn
   starting_position = "LATEST"
 }

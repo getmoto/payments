@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "lambda_assume_role_policy"{
     actions = ["sts:AssumeRole"]
     principals {
       type        = "Service"
-      identifiers = ["lambda.amazonaws.com", "edgelambda.amazonaws.com"]
+      identifiers = ["lambda.amazonaws.com"]
     }
   }
 }
@@ -136,6 +136,7 @@ resource "aws_lambda_function" "lambda_function_load_pr_info" {
       SCRIPT_INFO_TABLE_NAME = aws_dynamodb_table.script-execution-info.name
     }
   }
+  depends_on = [aws_cloudwatch_log_group.lambda_load_pr_info]
 }
 
 resource "aws_cloudwatch_log_group" "lambda_load_pr_info" {
@@ -177,14 +178,7 @@ resource "aws_lambda_function" "lambda_function_auth" {
   runtime       = "python3.9"
   handler       = "authentication.lambda_handler"
   timeout       = 5
-}
-
-# Stored in SSM to avoid a cyclic dependency from CLoudFront and Lambda
-# TODO: Remove once we switch to a full (non-CF) domain
-resource "aws_ssm_parameter" "domain_name" {
-  name  = "/moto/payments/domain_name"
-  type  = "String"
-  value = aws_cloudfront_distribution.website-cloudfront.domain_name
+  depends_on = [aws_cloudwatch_log_group.lambda_auth]
 }
 
 resource "aws_cloudwatch_log_group" "lambda_auth" {
@@ -225,6 +219,7 @@ resource "aws_lambda_function" "lambda_function_user_area" {
   runtime       = "python3.10"
   handler       = "user_area.lambda_handler"
   timeout       = 5
+  depends_on = [aws_cloudwatch_log_group.lambda_user_area]
 }
 
 resource "aws_cloudwatch_log_group" "lambda_user_area" {
@@ -240,18 +235,24 @@ resource "aws_lambda_permission" "user_area" {
   source_arn    = "${aws_apigatewayv2_api.payments-api.execution_arn}/*/*"
 }
 
-resource "aws_lambda_function" "pr_info_backup" {
-  function_name    = "PullRequestTableBackup"
-  filename         = data.archive_file.pr_info_backup_files.output_path
-  source_code_hash = data.archive_file.pr_info_backup_files.output_base64sha256
-  handler          = "backup_pr_data.handler"
+resource "aws_lambda_function" "payments_info_backup" {
+  function_name    = "PaymentsTableBackup"
+  filename         = data.archive_file.payment_info_backup_files.output_path
+  source_code_hash = data.archive_file.payment_info_backup_files.output_base64sha256
+  handler          = "backup_payment_data.handler"
   role             = aws_iam_role.lambda_assume_role.arn
   runtime          = "python3.8"
+  depends_on = [aws_cloudwatch_log_group.payments_backup]
 }
 
-data "archive_file" "pr_info_backup_files" {
-  output_path = "lambda_zips/pr_info_backup_files.zip"
-  source_file = "${var.lambda_root}/backup_pr_data.py"
+resource "aws_cloudwatch_log_group" "payments_backup" {
+  name              = "/aws/lambda/PaymentsTableBackup"
+  retention_in_days = 7
+}
+
+data "archive_file" "payment_info_backup_files" {
+  output_path = "lambda_zips/payment_info_backup_files.zip"
+  source_file = "${var.lambda_root}/backup_payment_data.py"
   type        = "zip"
 }
 
@@ -297,8 +298,8 @@ resource "aws_iam_role_policy" "dynamodb_read_log_policy" {
                     "dynamodb:ListStreams" ],
         "Effect": "Allow",
         "Resource": [
-          "${aws_dynamodb_table.pull-requests.arn}",
-          "${aws_dynamodb_table.pull-requests.arn}/*"
+          "${aws_dynamodb_table.payment-info.arn}",
+          "${aws_dynamodb_table.payment-info.arn}/*"
         ]
     },
     {

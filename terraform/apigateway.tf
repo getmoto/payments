@@ -36,6 +36,21 @@ resource "aws_apigatewayv2_route" "get_pr_info_route" {
   authorizer_id = aws_apigatewayv2_authorizer.authorize_user_area.id
 }
 
+resource "aws_apigatewayv2_integration" "get_payment_info_route" {
+  api_id                 = aws_apigatewayv2_api.payments-api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.lambda_function_user_area.arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "get_payment_info_route" {
+  api_id    = aws_apigatewayv2_api.payments-api.id
+  route_key = "GET /payment_info"
+  target    = "integrations/${aws_apigatewayv2_integration.get_payment_info_route.id}"
+  authorization_type = "CUSTOM"
+  authorizer_id = aws_apigatewayv2_authorizer.authorize_user_area.id
+}
+
 resource "aws_apigatewayv2_integration" "post_settings_route" {
   api_id                 = aws_apigatewayv2_api.payments-api.id
   integration_type       = "AWS_PROXY"

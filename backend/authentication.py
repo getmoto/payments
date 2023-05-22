@@ -13,15 +13,16 @@ state_table_name = "OAuthState"
 ssm = boto3.client("ssm", "us-east-1")
 github_client_id = ssm.get_parameter(Name="/moto/payments/github/oauth/client")["Parameter"]["Value"]
 github_client_secret = ssm.get_parameter(Name="/moto/payments/github/oauth/secret", WithDecryption=True)["Parameter"]["Value"]
-domain_name = ssm.get_parameter(Name="/moto/payments/domain_name", WithDecryption=False)["Parameter"]["Value"]
 
 dynamodb = boto3.client("dynamodb", "us-east-1")
 
 http = urllib3.PoolManager()
+domain_name = "payments.getmoto.org"
 redirect_uri = f"https://{domain_name}/api/logged_in"
 
 
 def lambda_handler(event, context):
+    print(event)
     path, method = get_path_method(event)
     if path == "/api/login" and method == "GET":
         request_id = event["requestContext"]["requestId"]
@@ -75,7 +76,7 @@ def lambda_handler(event, context):
             }
         }
 
-    if path == "/api/pr_info" and method == "GET":
+    if path in ["/api/pr_info", "/api/payment_info"] and method == "GET":
         # AUTHORIZER
         #
         # The actual logic is handled by user_area.py - here we just verify whether the user has access

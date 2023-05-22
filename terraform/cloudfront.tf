@@ -36,7 +36,7 @@ resource "aws_cloudfront_distribution" "website-cloudfront" {
     prefix          = "cloudfront"
   }
 
-  # aliases = ["mysite.example.com", "yoursite.example.com"]
+  aliases = [var.domain]
 
   default_cache_behavior {
     allowed_methods  = ["HEAD", "GET", "OPTIONS"]
@@ -86,7 +86,8 @@ resource "aws_cloudfront_distribution" "website-cloudfront" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn = aws_acm_certificate.payments_getmoto_org.arn
+    ssl_support_method = "sni-only"
   }
 
   restrictions {
@@ -115,8 +116,4 @@ resource "aws_s3_bucket_acl" "website-logging" {
   bucket = aws_s3_bucket.website-logging.id
   acl    = "private"
   depends_on = [aws_s3_bucket_ownership_controls.website-logging]
-}
-
-output "domain_name" {
-  value = aws_cloudfront_distribution.website-cloudfront.domain_name
 }

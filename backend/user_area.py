@@ -4,6 +4,7 @@ from boto3.dynamodb.conditions import Key
 
 
 dynamodb = boto3.resource("dynamodb", "us-east-1")
+payment_table = dynamodb.Table("Payments")
 pr_table = dynamodb.Table("PullRequests")
 user_table = dynamodb.Table("UserSettings")
 
@@ -21,8 +22,18 @@ def lambda_handler(event, context):
             ScanIndexForward=False,
             KeyConditionExpression=Key("username").eq(username)
         )["Items"]
-        oc_user = user_table.get_item(Key={"username": username}, ProjectionExpression="oc_username").get("Item", {}).get("oc_username")
-        return {"prs": items, "oc": oc_user}
+        return {"prs": items}
+
+    if path == "/api/payment_info" and method == "GET":
+        username = event["requestContext"]["authorizer"]["lambda"]["username"]
+        items = payment_table.query(
+            ScanIndexForward=False,
+            KeyConditionExpression=Key("username").eq(username)
+        )["Items"]
+        # Get OpenCollective username
+        resp = user_table.get_item(Key={"username": username}, ProjectionExpression="oc_username")
+        oc_user = resp.get("Item", {}).get("oc_username")
+        return {"payments": items, "oc": oc_user}
 
     if path == "/api/settings" and method == "POST":
         username = event["requestContext"]["authorizer"]["lambda"]["username"]
