@@ -1,3 +1,19 @@
+.show {
+    display: block;
+}
+.hide {
+    display: none;
+}
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+nav.demo {
+    margin: 0 2em;
+}
+
 .tabs {
 	display: flex;
 	flex-wrap: wrap; // make sure it wraps

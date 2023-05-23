@@ -5,23 +5,9 @@
     <title>Moto Payments - Login</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-
-    <style>
-        .show {
-          display: block;
-          }
-         .hide {
-         display: none;
-         }
-         .center {
-         display: flex;
-         justify-content: center;
-         align-items: center;
-         }
-    </style>
+    <link rel="stylesheet" href="css/main.css">
 
     <script type="text/javascript">
-      var logged_in = false
       function login() {
         window.location.href = 'api/login'
       }
@@ -35,20 +21,27 @@
 
     <nav class="demo">
         <ul class="brand">
-            <img class="logo" src="/img/basket.png"/>
-            <li><strong>Moto Moneys</strong></li>
+            <li><strong>Moto Payments (beta)</strong></li>
         </ul>
 
         <ul>
-            <li><a href="payments.html" class="button icon-picture hide" id="payment-menu-button">Payment Info</a></li>
             <li><a href="faq.html" class="button icon-picture" id="faq-menu-button">FAQ</a></li>
-            <li><a href="#" onclick="logout()" class="button icon-puzzle hide" id="logout-menu-button">Logout</a></li>
         </ul>
     </nav>
 
 </div>
 
 <main class="container">
+
+    <div>
+        <h4>Welcome to Moto Payments!</h4>
+        <p>
+            The purpose of this website is to distribute donations that the project receives, to contributors that have submitted PR's.
+        </p>
+        <p>
+            Please login with GitHub below to check if you are eligible to receive some of the donations.
+        </p>
+    </div>
 
     <div id="login-container" class="show">
         <div class="center">

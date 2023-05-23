@@ -5,20 +5,7 @@
     <title>Moto Payments - FAQ</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-
-    <style>
-        .show {
-          display: block;
-          }
-         .hide {
-         display: none;
-         }
-         .center {
-         display: flex;
-         justify-content: center;
-         align-items: center;
-         }
-    </style>
+    <link rel="stylesheet" href="css/main.css">
 
 </head>
 <body>
@@ -27,14 +14,12 @@
 
     <nav class="demo">
         <ul class="brand">
-            <img class="logo" src="/img/basket.png"/>
-            <li><strong>Moto Moneys</strong></li>
+            <li><strong>Moto Payments (beta)</strong></li>
         </ul>
 
         <ul>
             <li><a href="payments.html" class="button icon-picture hide" id="payment-menu-button">Payment Info</a></li>
             <li><a href="faq.html" class="button icon-picture" id="faq-menu-button">FAQ</a></li>
-            <li><a href="#" onclick="logout()" class="button icon-puzzle hide" id="logout-menu-button">Logout</a></li>
         </ul>
     </nav>
 
@@ -47,49 +32,30 @@
         <h3>About Moto Payments</h3>
         <details>
             <summary>What's the purpose of Moto Payments?</summary>
-            <p>Moto's success is due to its contributors. People who take time out of their day to fix a bug, or add a new feature, so that everyone can benefit.</p>
+            <p>Moto's success is all due to its contributors. People who take time out of their day to fix a bug, or add a new feature, so that everyone can benefit.</p>
             <p>Because contributors are so important, we think they should also receive a share of the donations that Moto receives.</p>
         </details>
 
         <details>
             <summary>How does it work?</summary>
-            <p>
-                All the money we receive in donations is managed by OpenCollective. They keep the money safe for us, and deal with the necessary taxes and paperwork.
-            </p>
-            <p>
-                This money can only be extracted using expenses, so that OpenCollective (and the tax man) knows exactly who has received the money.
-            </p>
-            <p>
-                that's why you, as a Moto contributor also has to raise an expense to want some of that sweet dough
-            </p>
+            <p>All the donations we receive are managed by OpenCollective. In order for anyone to receive money, they have to create an expense.</p>
+            <p>That's why we invite select Moto contributors to create expense, in order to receive some of the donation money.</p>
         </details>
 
         <details>
             <summary>How do I, as a contributor, claim my money?</summary>
             <p>
-                As explained above, we distribute the money through expenses.
+                If the Payments-page shows that you are eligible to receive money, you need to do three things:
             </p>
-            <p>That means that you need to do three things:
+            <p>
                 <ul>
                     <li>Create an OpenCollective account</li>
                     <li>Let us know your OpenCollective username</li>
-                    <li>Create an expense</li>
+                    <li>Create an expense against <a href="https://opencollective.com/moto">https://opencollective.com/moto</a></li>
                 </ul>
             </p>
             <p>
-                We will then approve the expense, and OpenCollective will send you the money.
-            </p>
-        </details>
-
-        <details>
-            <summary>Why do we need to know your OpenCollective username?</summary>
-            <p>Security - just to make sure that we're paying the right person!</p>
-        </details>
-
-        <details>
-            <summary>How do I create an OpenCollective account?</summary>
-            <p>
-                ...
+                We will then approve the expense and send you the money.
             </p>
         </details>
 
@@ -97,17 +63,27 @@
             <summary>How do I create an OpenCollective expense?</summary>
             <p>
                 <ol>
-                    <li>Go to opencollective.com/moto</li>
-                    <li>Click on <code>SUBMIT EXPENSE</code></li>
+                    <li>Go to <a href="https://opencollective.com/moto">https://opencollective.com/moto</a></li>
+                    <li>Click on <code>SUBMIT EXPENSE</code> in the topright corner
+                        <img src="images/SubmitExpense.png" alt="Location of the 'Submit Expense' button" />
+                    </li>
                     <li>Create an account, if necessary</li>
                     <li>Select <code>Invoice</code>, and fill out your payment details as required</li>
-                    <li>In the next screen, add the <code>Expense title</code> and <code>Description</code> as outlined on your Payments-page</li>
+                    <li>In the next screen, add the <code>Expense title</code> and <code>Description</code> as outlined on your Payments-page
+                        <img src="images/SubmitExpense_Details.png" alt="Screenshot of the Expense-procedure" />
+                    </li>
                 </ol>
             </p>
         </details>
 
         <details>
-            <summary>How can I give feedback?</summary>
+            <summary>The system is still in beta - what does that mean?</summary>
+            <p>The overall design and user experience may still change, but the overall functionality should be here.</p>
+            <p>Please let us know if you feel there's anything missing, or if you're running into problems!</p>
+        </details>
+
+        <details>
+            <summary>How can I raise a bug, or request a new feature?</summary>
             <p>Please open a new issue in the Github repo for this project: <a href="https://github.com/getmoto/payments">https://github.com/getmoto/payments</a></p>
         </details>
 
