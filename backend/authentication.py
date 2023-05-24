@@ -80,20 +80,24 @@ def lambda_handler(event, context):
         # AUTHORIZER
         #
         # The actual logic is handled by user_area.py - here we just verify whether the user has access
-        token = event["identitySource"][0].split("token=")[-1]
-        resp = http.request(
-            "GET",
-            "https://api.github.com/user",
-            headers={"Authorization": f"Bearer {token}"}
-        )
+        try:
+            token = event["identitySource"][0].split("token=")[-1]
+            resp = http.request(
+                "GET",
+                "https://api.github.com/user",
+                headers={"Authorization": f"Bearer {token}"}
+            )
 
-        username = json.loads(resp.data.decode('utf-8'))["login"]
-        return {
-          "isAuthorized": True,
-          "context": {
-            "username": username
-          }
-        }
+            username = json.loads(resp.data.decode('utf-8'))["login"]
+            return {
+                "isAuthorized": True,
+                "context": {
+                    "username": username
+                }
+            }
+        except Exception as e:
+            print(e)
+            return {"isAuthorized": False}
 
     # Nothing matched
     return {
