@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <title>Moto Payments</title>
@@ -43,7 +43,7 @@
                   if (payments.length == 0) {
                       document.getElementById("block_no_payments").classList.remove("hide");
                   } else {
-                      payments.forEach((x, i) => document.getElementById("payment_rows").innerHTML += "<tr><td scope='row'>" + x['amount'] + "</td><td scope='row'><pre>" + x['title'] + "</pre></td><td scope='row'><pre>" + x['details'] + "</pre></td></tr>");
+                      payments.forEach((x, i) => document.getElementById("payment_rows").innerHTML += "<tr><td scope='row'>" + x['amount'] + "</td><td scope='row'><pre>" + x['title'] + "</pre></td><td scope='row'>" + x['details'] + "</td></tr>");
                       document.getElementById("block_payments").classList.remove("hide");
                   }
                   document.getElementById("payments_wait").classList.add("hide");
