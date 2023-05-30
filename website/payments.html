@@ -43,7 +43,14 @@
                   if (payments.length == 0) {
                       document.getElementById("block_no_payments").classList.remove("hide");
                   } else {
-                      payments.forEach((x, i) => document.getElementById("payment_rows").innerHTML += "<tr><td scope='row'>" + x['amount'] + "</td><td scope='row'><pre>" + x['title'] + "</pre></td><td scope='row'>" + x['details'] + "</td></tr>");
+                      payments.forEach((x) => {
+                        if ("processed" in x) {
+                          document.getElementById("processed_payment_rows").innerHTML += "<tr><td scope='row'>" + x['amount'] + "</td><td scope='row'><a href='" + x['processed']['order'] + "'>" + x['title'] + "</a></td><td scope='row'>" + x['details'] + "</td><td scope='row'>" + x['processed']['approved_on'] + "</td></tr>";
+                          document.getElementById("processed_payments").classList.remove("hide");
+                        } else {
+                          document.getElementById("payment_rows").innerHTML += "<tr><td scope='row'>" + x['amount'] + "</td><td scope='row'><pre>" + x['title'] + "</pre></td><td scope='row'>" + x['details'] + "</td></tr>";
+                        }
+                      });
                       document.getElementById("block_payments").classList.remove("hide");
                   }
                   document.getElementById("payments_wait").classList.add("hide");
@@ -149,6 +156,24 @@
                     Any questions? Please see <a href="faq.html">our FAQ</a>.
                 </p>
 
+            </div>
+
+            <div id="processed_payments" class="hide">
+                <hr />
+                <p>Processed Payments</p>
+                <table>
+                        <thead>
+                            <tr>
+                              <th scope="col">Amount</th>
+                              <th scope="col">Expense Title</th>
+                              <th scope="col">Description</th>
+                                <th scope="col">Approved on</th>
+                            </tr>
+                        </thead>
+                        <tbody id="processed_payment_rows">
+
+                        </tbody>
+                    </table>
             </div>
 
         </div>
