@@ -112,6 +112,7 @@ data "archive_file" "lambda_load-pr_package" {
   excludes   = [
     "__pycache__",
     "venv",
+    "backup_payment_data.py",
     "authentication.py",
     "requirements.txt",
     "user_area.py"
@@ -142,6 +143,25 @@ resource "aws_lambda_function" "lambda_function_load_pr_info" {
 resource "aws_cloudwatch_log_group" "lambda_load_pr_info" {
   name              = "/aws/lambda/LoadPullRequestInfo"
   retention_in_days = 7
+}
+
+resource "aws_cloudwatch_event_rule" "load_pr_lambda_event_rule" {
+  name = "load-pr-lambda-event-rule"
+  description = "Load PR's from GitHub"
+  schedule_expression = "rate(12 hours)"
+}
+
+resource "aws_cloudwatch_event_target" "load_pr_lambda_target" {
+  arn = aws_lambda_function.lambda_function_load_pr_info.arn
+  rule = aws_cloudwatch_event_rule.load_pr_lambda_event_rule.name
+}
+
+resource "aws_lambda_permission" "load_pr_event_permission" {
+  statement_id = "AllowExecutionFromCloudWatch"
+  action = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda_function_load_pr_info.function_name
+  principal = "events.amazonaws.com"
+  source_arn = aws_cloudwatch_event_rule.load_pr_lambda_event_rule.arn
 }
 
 resource "random_uuid" "lambda_hash_auth" {
