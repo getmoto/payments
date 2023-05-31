@@ -55,9 +55,7 @@
                   }
                   document.getElementById("payments_wait").classList.add("hide");
                 } else {
-                  if (xhr.status == 403) {
-                    window.location.href = 'index.html'
-                  }
+                  window.location.href = 'index.html'
                 }
             };
         }
@@ -79,14 +77,10 @@
             }
         }
 
-        function load_all() {
-            get_payment_info();
-        }
-
     </script>
 
 </head>
-<body onload="load_all()">
+<body onload="get_payment_info()">
 
 <div style="overflow: hidden;height: 50px;">
 

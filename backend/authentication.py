@@ -5,6 +5,7 @@ import base64
 import boto3
 import json
 import urllib3
+from datetime import datetime, timedelta
 from time import time
 from uuid import uuid4
 
@@ -19,6 +20,10 @@ dynamodb = boto3.client("dynamodb", "us-east-1")
 http = urllib3.PoolManager()
 domain_name = "payments.getmoto.org"
 redirect_uri = f"https://{domain_name}/api/logged_in"
+
+# Format for the Expiry-attribute in our cookie
+RFC1123 = "%a, %d %b %Y %H:%M:%S GMT"
+TOKEN_NAME = "__Host-token"
 
 
 def lambda_handler(event, context):
@@ -67,12 +72,13 @@ def lambda_handler(event, context):
         access_token = json.loads(resp.data.decode('utf-8'))["access_token"]
         # TODO: store access token against username?
 
-        expiry = "Fri, 13-Feb-2032 13:27:44 GMT"
+        now = datetime.now()
+        later = now + timedelta(days=7)
         return {
             "statusCode": "302",
             "headers": {
                 "location": f"https://{domain_name}/payments.html",
-                "Set-Cookie": f"token={access_token}; path=/; expires={expiry}; secure; HttpOnly; SameSite=None",
+                "Set-Cookie": f"{TOKEN_NAME}={access_token}; path=/; expires={later.strftime(RFC1123)}; Secure; HttpOnly; SameSite=Strict"
             }
         }
 
@@ -81,7 +87,7 @@ def lambda_handler(event, context):
         #
         # The actual logic is handled by user_area.py - here we just verify whether the user has access
         try:
-            token = event["identitySource"][0].split("token=")[-1]
+            token = event["identitySource"][0].split(f"{TOKEN_NAME}=")[-1]
             resp = http.request(
                 "GET",
                 "https://api.github.com/user",
@@ -98,6 +104,25 @@ def lambda_handler(event, context):
         except Exception as e:
             print(e)
             return {"isAuthorized": False}
+
+    if path in ["/api/status"] and method == "GET":
+        try:
+            token = None
+            for cookie in event["cookies"]:
+                if cookie.startswith(f"{TOKEN_NAME}="):
+                    token = cookie.split(f"{TOKEN_NAME}=")[-1]
+            if not token:
+                raise Exception("no")
+            resp = http.request(
+                "GET",
+                "https://api.github.com/user",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+
+            json.loads(resp.data.decode('utf-8'))["login"]
+            return {"statusCode": "200"}
+        except Exception as e:
+            return {"statusCode": "403"}
 
     # Nothing matched
     return {

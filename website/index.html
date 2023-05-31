@@ -12,10 +12,28 @@
         window.location.href = 'api/login'
       }
 
+      function check_status() {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", "/api/status");
+          xhr.send();
+
+          xhr.onload = () => {
+              if (xhr.readyState == 4 && xhr.status == 200) {
+                window.location.href = 'payments.html'
+              } else {
+                if (xhr.status == 403) {
+                  document.getElementById("payments_wait").classList.add("hide");
+                  document.getElementById("main_intro").classList.remove("hide");
+                  document.getElementById("login-container").classList.remove("hide");
+                }
+              }
+          };
+      }
+
     </script>
 
 </head>
-<body>
+<body onload="check_status()">
 
 <div style="overflow: hidden;height: 50px;">
 
@@ -33,7 +51,9 @@
 
 <main class="container">
 
-    <div>
+    <div id="payments_wait" aria-busy="true"></div>
+
+    <div id="main_intro" class="hide">
         <h4>Welcome to Moto Payments!</h4>
         <p>
             The purpose of this website is to distribute donations that the project receives, to contributors that have submitted PR's.
@@ -43,7 +63,7 @@
         </p>
     </div>
 
-    <div id="login-container" class="show">
+    <div id="login-container" class="hide">
         <div class="center">
             <span onclick="login()" class="btn btn-block btn-social btn-github center" role="button">
                 <i class="fa fa-github"></i> Sign in with GitHub
