@@ -17,5 +17,5 @@ terraform {
 }
 
 module "infrastructure" {
-  source = "./terraform"
+  source = "../../modules/infra"
 }

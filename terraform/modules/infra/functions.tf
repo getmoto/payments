@@ -1,7 +1,7 @@
 variable "lambda_root" {
   type        = string
   description = "The relative path to the source of the lambda"
-  default     = "backend/"
+  default     = "../../../backend/"
 }
 
 data "aws_iam_policy_document" "lambda_assume_role_policy"{

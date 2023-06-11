@@ -162,5 +162,5 @@ cython_debug/
 # Terraform
 .terraform*
 terraform.tfstate*
-lambda_zips/*.zip
+**/lambda_zips/*.zip
 backend/urllib3*

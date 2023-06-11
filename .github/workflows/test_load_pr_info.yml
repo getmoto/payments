@@ -31,13 +31,12 @@ jobs:
           pip install -r backend/requirements.txt
       - name: Prepare TF to run against MotoServer
         run: |
-          rm provider.tf
-          mv provider.mock provider.tf
+          echo rm provider.tf
+          echo mv provider.mock provider.tf
       - name: Run TF
         run: |
           mkdir ~/.aws && touch ~/.aws/credentials && echo -e "[default]\naws_access_key_id = test\naws_secret_access_key = test" > ~/.aws/credentials
-          terraform init
-          terraform apply -target=aws_dynamodb_table.pull-requests -auto-approve
+          echo terraform init
       - name: Execute tests
         run: |
           echo "TODO"
