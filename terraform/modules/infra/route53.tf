@@ -1,8 +1,13 @@
 variable "domain" {
-  default = "payments.getmoto.org"
+  type = string
+}
+
+variable root_domain {
+  type = string
 }
 
 resource "aws_acm_certificate" "payments_getmoto_org" {
+  provider = aws.useast1
   domain_name       = var.domain
   validation_method = "DNS"
 
@@ -16,7 +21,7 @@ resource "aws_acm_certificate" "payments_getmoto_org" {
 }
 
 data "aws_route53_zone" "getmoto_org" {
-  name         = "getmoto.org"
+  name         = var.root_domain
   private_zone = false
 }
 
@@ -50,6 +55,7 @@ resource "aws_route53_record" "example" {
 }
 
 resource "aws_acm_certificate_validation" "example" {
+  provider = aws.useast1
   certificate_arn         = aws_acm_certificate.payments_getmoto_org.arn
   validation_record_fqdns = [for record in aws_route53_record.example : record.fqdn]
 }

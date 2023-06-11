@@ -9,7 +9,7 @@ terraform {
   required_version = ">= 1.2.0"
 
   backend "s3" {
-    bucket         = "moto-payments-terraform-state"
+    bucket         = "test-moto-payments-terraform-state"
     key            = "terraform.tfstate"
     region         = "us-east-1"
     profile        = "moto"
@@ -19,7 +19,8 @@ terraform {
 module "infrastructure" {
   source = "../../modules/infra"
   root_domain = "getmoto.org"
-  domain = "payments.getmoto.org"
+  domain = "test.payments.getmoto.org"
+  resource_prefix = "test-"
   providers = {
     aws.useast1 = aws.useast1
   }

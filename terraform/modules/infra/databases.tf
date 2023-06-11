@@ -124,7 +124,7 @@ ITEM
 }
 
 resource "aws_s3_bucket" "website-backup" {
-  bucket = "moto-payments-website-backup"
+  bucket = "${var.resource_prefix}moto-payments-website-backup"
 
   tags = {
     Project     = "payments"

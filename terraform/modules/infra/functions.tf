@@ -30,7 +30,7 @@ data "aws_iam_policy_document" "lambda_logging" {
 }
 
 resource "aws_iam_policy" "lambda_logging" {
-  name        = "lambda_logging"
+  name        = "${var.resource_prefix}lambda_logging"
   path        = "/"
   description = "IAM policy for logging from a lambda"
   policy      = data.aws_iam_policy_document.lambda_logging.json
@@ -69,7 +69,7 @@ data "aws_iam_policy_document" "lambda_service_access" {
 }
 
 resource "aws_iam_policy" "lambda_service_access" {
-  name        = "lambda_service_access"
+  name        = "${var.resource_prefix}lambda_service_access"
   path        = "/"
   description = "IAM policy detailing which services Lambda functions can access"
   policy      = data.aws_iam_policy_document.lambda_service_access.json
@@ -81,7 +81,7 @@ resource "aws_iam_role_policy_attachment" "lambda_service_access" {
 }
 
 resource "aws_iam_role" "lambda_role" {
-  name = "lambda-lambdaRole"
+  name = "${var.resource_prefix}lambda-lambdaRole"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
 }
 
@@ -133,6 +133,7 @@ resource "aws_lambda_function" "lambda_function_load_pr_info" {
   timeout       = 60
   environment {
     variables = {
+      REGION = data.aws_region.current.name
       PR_TABLE_NAME = aws_dynamodb_table.pull-requests.name
       SCRIPT_INFO_TABLE_NAME = aws_dynamodb_table.script-execution-info.name
     }
@@ -199,6 +200,12 @@ resource "aws_lambda_function" "lambda_function_auth" {
   handler       = "authentication.lambda_handler"
   timeout       = 5
   depends_on = [aws_cloudwatch_log_group.lambda_auth]
+  environment {
+    variables = {
+      REGION = data.aws_region.current.name
+      DOMAIN_NAME = var.domain
+    }
+  }
 }
 
 resource "aws_cloudwatch_log_group" "lambda_auth" {
@@ -240,6 +247,11 @@ resource "aws_lambda_function" "lambda_function_user_area" {
   handler       = "user_area.lambda_handler"
   timeout       = 5
   depends_on = [aws_cloudwatch_log_group.lambda_user_area]
+  environment {
+    variables = {
+      REGION = data.aws_region.current.name
+    }
+  }
 }
 
 resource "aws_cloudwatch_log_group" "lambda_user_area" {
@@ -263,6 +275,11 @@ resource "aws_lambda_function" "payments_info_backup" {
   role             = aws_iam_role.lambda_assume_role.arn
   runtime          = "python3.8"
   depends_on = [aws_cloudwatch_log_group.payments_backup]
+  environment {
+    variables = {
+      BACKUP_BUCKET_NAME = aws_s3_bucket.website-backup.bucket
+    }
+  }
 }
 
 resource "aws_cloudwatch_log_group" "payments_backup" {
@@ -277,7 +294,7 @@ data "archive_file" "payment_info_backup_files" {
 }
 
 resource "aws_iam_role" "lambda_assume_role" {
-  name               = "lambda-dynamodb-role"
+  name               = "${var.resource_prefix}lambda-dynamodb-role"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",

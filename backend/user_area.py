@@ -1,9 +1,11 @@
 import boto3
 import json
+import os
 from boto3.dynamodb.conditions import Key
 
 
-dynamodb = boto3.resource("dynamodb", "us-east-1")
+region = os.getenv("REGION")
+dynamodb = boto3.resource("dynamodb", region)
 payment_table = dynamodb.Table("Payments")
 pr_table = dynamodb.Table("PullRequests")
 user_table = dynamodb.Table("UserSettings")

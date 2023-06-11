@@ -1,5 +1,10 @@
+variable "resource_prefix" {
+  type = string
+  default = ""
+}
+
 resource "aws_s3_bucket" "website-fe" {
-  bucket = "moto-payments-website-fe"
+  bucket = "${var.resource_prefix}moto-payments-website-fe"
 
   tags = {
     Project     = "payments"

@@ -4,21 +4,23 @@ import base64
 
 import boto3
 import json
+import os
 import urllib3
 from datetime import datetime, timedelta
 from time import time
 from uuid import uuid4
 
 state_table_name = "OAuthState"
+domain_name = os.getenv("DOMAIN_NAME")
+region = os.getenv("REGION")
 
-ssm = boto3.client("ssm", "us-east-1")
+ssm = boto3.client("ssm", region)
 github_client_id = ssm.get_parameter(Name="/moto/payments/github/oauth/client")["Parameter"]["Value"]
 github_client_secret = ssm.get_parameter(Name="/moto/payments/github/oauth/secret", WithDecryption=True)["Parameter"]["Value"]
 
-dynamodb = boto3.client("dynamodb", "us-east-1")
+dynamodb = boto3.client("dynamodb", region)
 
 http = urllib3.PoolManager()
-domain_name = "payments.getmoto.org"
 redirect_uri = f"https://{domain_name}/api/logged_in"
 
 # Format for the Expiry-attribute in our cookie

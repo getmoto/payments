@@ -10,11 +10,13 @@ import os
 from query_github import QueryGithub
 
 
-dynamodb = boto3.client("dynamodb", "us-east-1")
+region = os.getenv("REGION")
 pr_table_name = os.getenv("PR_TABLE_NAME")
 script_info_table_name = os.getenv("SCRIPT_INFO_TABLE_NAME")
 
-ssm = boto3.client("ssm", "us-east-1")
+dynamodb = boto3.client("dynamodb", region)
+
+ssm = boto3.client("ssm", region)
 github_token = ssm.get_parameter(Name="/moto/payments/tokens/github", WithDecryption=True)["Parameter"]["Value"]
 
 

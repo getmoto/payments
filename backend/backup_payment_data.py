@@ -1,10 +1,12 @@
 import boto3
 import json
 import time
+import os
 import uuid
 
 
 s3 = boto3.client("s3", "us-east-1")
+bucket_name = os.getenv("BACKUP_BUCKET_NAME")
 
 
 def handler(event, context):
@@ -25,7 +27,7 @@ def handler(event, context):
 
     s3.put_object(
         Body=short_form,
-        Bucket="moto-payments-website-backup",
+        Bucket=bucket_name,
         Key=unique_key
     )
 

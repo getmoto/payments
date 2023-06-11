@@ -1,5 +1,5 @@
 resource "aws_cloudfront_origin_access_control" "website" {
-  name                              = "CF Origin Access Control"
+  name                              = "${var.resource_prefix}CF Origin Access Control"
   description                       = "Example Policy"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -98,7 +98,7 @@ resource "aws_cloudfront_distribution" "website-cloudfront" {
 }
 
 resource "aws_s3_bucket" "website-logging" {
-  bucket = "moto-payments-website-logging"
+  bucket = "${var.resource_prefix}moto-payments-website-logging"
 
   tags = {
     Project     = "payments"
