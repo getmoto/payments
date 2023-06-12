@@ -10,6 +10,7 @@ resource "aws_apigatewayv2_authorizer" "authorize_user_area" {
   name                              = "example-authorizer"
   authorizer_payload_format_version = "2.0"
   enable_simple_responses           = true
+  authorizer_result_ttl_in_seconds  = 0
 }
 
 resource "aws_apigatewayv2_api" "payments-api" {

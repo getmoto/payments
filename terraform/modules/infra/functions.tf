@@ -110,10 +110,9 @@ resource "random_uuid" "lambda_hash_load_pr_info" {
 data "archive_file" "lambda_load-pr_package" {
   depends_on = [null_resource.install_dependencies]
   excludes   = [
-    "__pycache__",
-    "venv",
-    "backup_payment_data.py",
     "authentication.py",
+    "backup_payment_data.py",
+    "expiring_dict.py",
     "requirements.txt",
     "user_area.py"
   ]
@@ -178,12 +177,12 @@ resource "random_uuid" "lambda_hash_auth" {
 data "archive_file" "lambda_auth_package" {
   depends_on = [null_resource.install_dependencies]
   excludes   = [
-    "__pycache__",
-    "venv",
+    "__init__.py",
+    "backup_payment_data.py",
     "load_pr_info.py",
     "query_github.py",
-    "cronjobs/export_tables",
-    "requirements.txt"
+    "requirements.txt",
+    "user_area.py"
   ]
 
   source_dir  = var.lambda_root

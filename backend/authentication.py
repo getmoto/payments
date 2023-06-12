@@ -1,11 +1,11 @@
 # https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#web-application-flow
 # https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow
 import base64
-
 import boto3
 import json
 import os
 import urllib3
+from expiring_dict import ExpiringDict
 from datetime import datetime, timedelta
 from time import time
 from uuid import uuid4
@@ -26,6 +26,9 @@ redirect_uri = f"https://{domain_name}/api/logged_in"
 # Format for the Expiry-attribute in our cookie
 RFC1123 = "%a, %d %b %Y %H:%M:%S GMT"
 TOKEN_NAME = "__Host-token"
+
+
+valid_access_tokens = ExpiringDict(max_len=100, max_age_seconds=60)
 
 
 def lambda_handler(event, context):
@@ -72,7 +75,6 @@ def lambda_handler(event, context):
                      "Content-Type": "application/json"}
         )
         access_token = json.loads(resp.data.decode('utf-8'))["access_token"]
-        # TODO: store access token against username?
 
         now = datetime.now()
         later = now + timedelta(days=7)
@@ -90,13 +92,17 @@ def lambda_handler(event, context):
         # The actual logic is handled by user_area.py - here we just verify whether the user has access
         try:
             token = event["identitySource"][0].split(f"{TOKEN_NAME}=")[-1]
-            resp = http.request(
-                "GET",
-                "https://api.github.com/user",
-                headers={"Authorization": f"Bearer {token}"}
-            )
+            if token in valid_access_tokens:
+                username = valid_access_tokens[token]
+            else:
+                resp = http.request(
+                    "GET",
+                    "https://api.github.com/user",
+                    headers={"Authorization": f"Bearer {token}"}
+                )
 
-            username = json.loads(resp.data.decode('utf-8'))["login"]
+                username = json.loads(resp.data.decode('utf-8'))["login"]
+                valid_access_tokens[token] = username
             return {
                 "isAuthorized": True,
                 "context": {
@@ -115,13 +121,16 @@ def lambda_handler(event, context):
                     token = cookie.split(f"{TOKEN_NAME}=")[-1]
             if not token:
                 raise Exception("no")
-            resp = http.request(
-                "GET",
-                "https://api.github.com/user",
-                headers={"Authorization": f"Bearer {token}"}
-            )
+            if token not in valid_access_tokens:
+                resp = http.request(
+                    "GET",
+                    "https://api.github.com/user",
+                    headers={"Authorization": f"Bearer {token}"}
+                )
 
-            json.loads(resp.data.decode('utf-8'))["login"]
+                username = json.loads(resp.data.decode('utf-8'))["login"]
+                valid_access_tokens[token] = username
+
             return {"statusCode": "200"}
         except Exception as e:
             return {"statusCode": "403"}
