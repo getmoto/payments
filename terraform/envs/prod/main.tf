@@ -19,6 +19,7 @@ module "infrastructure" {
   source = "../../modules/infra"
   root_domain = "getmoto.org"
   domain = "payments.getmoto.org"
+  cloudfront_ttl = 604800  # one week
   providers = {
     aws.useast1 = aws.useast1
   }

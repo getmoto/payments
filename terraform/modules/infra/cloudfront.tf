@@ -1,3 +1,7 @@
+variable "cloudfront_ttl" {
+  type = number
+}
+
 resource "aws_cloudfront_origin_access_control" "website" {
   name                              = "${var.resource_prefix}CF Origin Access Control"
   description                       = "Example Policy"
@@ -54,8 +58,8 @@ resource "aws_cloudfront_distribution" "website-cloudfront" {
     viewer_protocol_policy = "redirect-to-https"
     # Testing
     min_ttl                = 0
-    default_ttl            = 10
-    max_ttl                = 10
+    default_ttl            = var.cloudfront_ttl
+    max_ttl                = var.cloudfront_ttl
   }
 
   # Redirect to API Gateway

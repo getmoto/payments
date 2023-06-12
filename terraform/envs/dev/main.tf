@@ -21,6 +21,7 @@ module "infrastructure" {
   root_domain = "getmoto.org"
   domain = "test.payments.getmoto.org"
   resource_prefix = "test-"
+  cloudfront_ttl = 60  # one minute
   providers = {
     aws.useast1 = aws.useast1
   }
