@@ -41,4 +41,4 @@ jobs:
       run: |
         cd terraform/envs/${{ env.ENV_NAME }}
         terraform init
-        terraform plan
+        terraform apply --auto-approve
