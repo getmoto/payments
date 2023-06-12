@@ -12,7 +12,6 @@ terraform {
     bucket         = "moto-payments-terraform-state"
     key            = "terraform.tfstate"
     region         = "us-east-1"
-    profile        = "moto"
   }
 }
 
