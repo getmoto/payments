@@ -1,0 +1,39 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      env_name:
+        description: 'Environment: dev/prod'
+        required: true
+
+jobs:
+  deploy-infra:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ENV_NAME: unknown
+    steps:
+    - name: Set Env
+      run: |
+        echo "ENV_NAME=${{ github.event.inputs.env_name }}" >> $GITHUB_ENV
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Configure aws credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-region: us-east-1
+        role-to-assume: arn:aws:iam::193347341732:role/GithubActionsRole
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+    - name: Run Terraform
+      run: |
+        cd terraform/envs/${{ env.ENV_NAME }}
+        terraform init
+        terraform plan
