@@ -1,3 +1,7 @@
+:root {
+  --primary: #4169e1;
+}
+
 .show {
     display: block;
 }
