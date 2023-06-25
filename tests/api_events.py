@@ -41,11 +41,11 @@ api_login_event = {
     "isBase64Encoded": False,
 }
 
-api_gw_event = {
+api_pr_info_event = {
     "version": "2.0",
     "type": "REQUEST",
     "routeArn": "arn:aws:execute-api:us-east-1:193347341732:iaq4obbxnd/api/GET/pr_info",
-    "identitySource": ["token=at"],
+    "identitySource": ["__Host-token=gho_cAHumzvdbT; cookie2=yum; cookie3=ugh"],
     "routeKey": "GET /pr_info",
     "rawPath": "/api/pr_info",
     "rawQueryString": "",
@@ -69,8 +69,8 @@ api_gw_event = {
     "requestContext": {
         "accountId": "193347341732",
         "apiId": "iaq4obbxnd",
-        "domainName": "iaq4obbxnd.execute-api.us-east-1.amazonaws.com",
-        "domainPrefix": "iaq4obbxnd",
+        "domainName": "iaq.execute-api.us-east-1.amazonaws.com",
+        "domainPrefix": "iaq4",
         "http": {
             "method": "GET",
             "path": "/api/pr_info",
@@ -245,3 +245,15 @@ dynamodb_records = {
         }
     ]
 }
+
+github_user_response = {
+    "login": "my_user_name",
+    "id": 60585,
+    "node_id": "M=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/60585?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/my_user_name",
+    "html_url": "https://github.com/my_user_name",
+}
+
+github_bad_credentials = {'message': 'Bad credentials', 'documentation_url': 'https://docs.github.com/rest'}

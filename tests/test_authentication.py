@@ -1,8 +1,11 @@
 import boto3
+import copy
+import json
 from base64 import b64decode
+
 from moto import mock_dynamodb, mock_ssm
-from unittest.mock import patch
-from .api_events import api_login_event
+from unittest.mock import patch, Mock
+from .api_events import api_login_event, api_pr_info_event, github_user_response
 
 
 @mock_dynamodb
@@ -47,3 +50,68 @@ class TestAuthentication:
         assert "expiration" in items[0]
         state = items[0]["state"]["S"]
         assert api_login_event["requestContext"]["requestId"] in b64decode(state).decode("utf-8")
+
+    def test_auth_for_pr_info(self):
+        from backend import authentication
+
+        token_value = "gho_cAHumzvdbT"
+        with patch.object(authentication.http, "request", return_value=Mock()) as mock_http:
+            mock_http.return_value.data = json.dumps(github_user_response).encode("utf-8")
+
+            # Verify user is logged in
+            resp = authentication.lambda_handler(api_pr_info_event, context=None)
+            assert resp == {"isAuthorized": True, "context": {"username": "my_user_name"}}
+
+            # Verify the correct token was passed
+            request_args = list(mock_http.call_args)
+            assert ('GET', "https://api.github.com/user") in request_args
+            assert {'headers': {"Authorization": f"Bearer {token_value}"}} in request_args
+
+        # Verify that the access token is temporarily cached
+        resp = authentication.lambda_handler(api_pr_info_event, context=None)
+        assert resp == {"isAuthorized": True, "context": {"username": "my_user_name"}}
+
+        assert token_value in authentication.valid_access_tokens
+        assert authentication.valid_access_tokens[token_value] == "my_user_name"
+
+    def test_auth_for_pr_info__no_cookies(self):
+        from backend import authentication
+
+        event = copy.deepcopy(api_pr_info_event)
+        event["identitySource"] = []
+
+        # Verify we get the correct response
+        # Note that we don't have to mock any URL requests, as we won't get that far
+        resp = authentication.lambda_handler(event, context=None)
+        assert resp == {"isAuthorized": False}
+
+    def test_auth_for_pr_info__missing_cookies(self):
+        from backend import authentication
+
+        event = copy.deepcopy(api_pr_info_event)
+        event["identitySource"] = ["cookie=yum; second_cooke=too_much"]
+
+        # Verify we get the correct response
+        # Note that we don't have to mock any URL requests, as we won't get that far
+        resp = authentication.lambda_handler(event, context=None)
+        assert resp == {"isAuthorized": False}
+
+    def test_auth_for_pr_info__cookies_in_different_order(self):
+        from backend import authentication
+
+        # Re-arrange the cookies, so that the desired cookie is in the middle
+        token_value = "my_unique_token"
+        event = copy.deepcopy(api_pr_info_event)
+        event["identitySource"] = [f"cookie=yum; __Host-token={token_value}; second_cookie=too_much"]
+
+        with patch.object(authentication.http, "request", return_value=Mock()) as mock_http:
+            mock_http.return_value.data = json.dumps(github_user_response).encode("utf-8")
+
+            # Verify user is logged in
+            resp = authentication.lambda_handler(event, context=None)
+            assert resp == {"isAuthorized": True, "context": {"username": "my_user_name"}}
+
+            # Verify the correct token was passed
+            request_args = list(mock_http.call_args)
+            assert ('GET', "https://api.github.com/user") in request_args
+            assert {'headers': {"Authorization": f"Bearer {token_value}"}} in request_args

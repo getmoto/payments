@@ -91,7 +91,12 @@ def lambda_handler(event, context):
         #
         # The actual logic is handled by user_area.py - here we just verify whether the user has access
         try:
-            token = event["identitySource"][0].split(f"{TOKEN_NAME}=")[-1]
+            token = None
+            for cookie in event["identitySource"][0].split(";"):
+                if cookie.strip().startswith(f"{TOKEN_NAME}="):
+                    token = cookie.split(f"{TOKEN_NAME}=")[-1]
+            if not token:
+                raise Exception("no")
             if token in valid_access_tokens:
                 username = valid_access_tokens[token]
             else:
