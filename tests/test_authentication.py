@@ -1,5 +1,4 @@
 import boto3
-import os
 from base64 import b64decode
 from moto import mock_dynamodb, mock_ssm
 from unittest.mock import patch
@@ -8,9 +7,9 @@ from .api_events import api_login_event
 
 @mock_dynamodb
 @mock_ssm
-@patch.dict(os.environ, {"REGION": "us-east-1"})
 class TestAuthentication:
 
+    @patch.dict("os.environ", {"REGION": "us-east-1"})
     def setup_method(self, *args):
         ssm = boto3.client("ssm", "us-east-1")
         ssm.put_parameter(
