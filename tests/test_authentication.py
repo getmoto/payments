@@ -6,6 +6,8 @@ from base64 import b64decode
 from moto import mock_dynamodb, mock_ssm
 from unittest.mock import patch, Mock
 from .api_events import api_login_event, api_pr_info_event, github_user_response
+from .api_events import api_status_event
+from .api_events import github_bad_credentials
 
 
 @mock_dynamodb
@@ -25,7 +27,9 @@ class TestAuthentication:
             Value="my_client_secret",
             Type="SecureString",
         )
-        from backend.authentication import state_table_name
+        from backend.authentication import state_table_name, valid_access_tokens
+        valid_access_tokens.clear()
+
         self.ddb = boto3.client("dynamodb", region_name="us-east-1")
         self.ddb.create_table(
             TableName=state_table_name,
@@ -115,3 +119,41 @@ class TestAuthentication:
             request_args = list(mock_http.call_args)
             assert ('GET', "https://api.github.com/user") in request_args
             assert {'headers': {"Authorization": f"Bearer {token_value}"}} in request_args
+
+    def test_auth_for_status(self):
+        from backend import authentication
+
+        with patch.object(authentication.http, "request", return_value=Mock()) as mock_http:
+            mock_http.return_value.data = json.dumps(github_user_response).encode("utf-8")
+
+            # Verify user is logged in
+            resp = authentication.lambda_handler(api_status_event, context=None)
+            assert resp == {'statusCode': '200'}
+
+            # Verify the correct token was passed
+            request_args = list(mock_http.call_args)
+            assert ('GET', "https://api.github.com/user") in request_args
+            assert {'headers': {"Authorization": f"Bearer gho_cAHumzvdbT"}} in request_args
+
+    def test_auth_status__missing_cookie(self):
+        from backend import authentication
+
+        event = copy.deepcopy(api_status_event)
+        event["cookies"] = []
+
+        # Verify this fails without cookies
+        resp = authentication.lambda_handler(event, context=None)
+        assert resp == {'statusCode': '403'}
+
+    def test_auth_status__invalid_cookie(self):
+        from backend import authentication
+
+        event = copy.deepcopy(api_pr_info_event)
+        event["cookies"] = []
+
+        with patch.object(authentication.http, "request", return_value=Mock()) as mock_http:
+            mock_http.return_value.data = json.dumps(github_bad_credentials).encode("utf-8")
+
+            # Verify GH says no
+            resp = authentication.lambda_handler(api_status_event, context=None)
+            assert resp == {'statusCode': '403'}
