@@ -6,15 +6,13 @@ jobs:
 
   unittest:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ "3.10" ]
+
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
       - name: Update pip
         run: |
           python -m pip install --upgrade pip
@@ -32,11 +30,8 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   test_terraform:
-    name: "TODO: TF test"
+    name: "TerraForm tests"
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ "3.10" ]
 
     services:
       motoserver:
@@ -46,10 +41,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
       - name: Update pip
         run: |
           python -m pip install --upgrade pip
@@ -57,14 +52,23 @@ jobs:
         if: ${{ steps.pip-cache.outputs.cache-hit != 'true' }}
         run: |
           pip install -r backend/requirements.txt
-      - name: Prepare TF to run against MotoServer
-        run: |
-          echo rm provider.tf
-          echo mv provider.mock provider.tf
       - name: Run TF
         run: |
           mkdir ~/.aws && touch ~/.aws/credentials && echo -e "[default]\naws_access_key_id = test\naws_secret_access_key = test" > ~/.aws/credentials
-          echo terraform init
+          touch ~/.aws/config && echo -e "[default]\nregion = us-east-1" > ~/.aws/config
+          aws route53 create-hosted-zone --name getmoto.org --caller-ref x --endpoint-url http://localhost:5000
+          cd terraform/envs/test
+          ls -la
+          cat provider.tf
+          terraform init
+          terraform apply --auto-approve
+          cd ../../..
       - name: Execute tests
         run: |
-          echo "TODO"
+          pip install -r tests/requirements.txt
+          pytest -sv --cov backend --cov-report xml integration_tests
+      - name: Upload coverage reports to Codecov
+        if: ${{ github.repository == 'getmoto/payments'}}
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

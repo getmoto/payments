@@ -1,0 +1,4 @@
+codecov:
+  notify:
+    # Leave a GitHub comment after all builds have passed
+    after_n_builds: 2
