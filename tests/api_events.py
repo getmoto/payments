@@ -49,23 +49,7 @@ api_pr_info_event = {
     "routeKey": "GET /pr_info",
     "rawPath": "/api/pr_info",
     "rawQueryString": "",
-    "cookies": ["token=at"],
-    "headers": {
-        "accept-encoding": "gzip",
-        "content-length": "0",
-        "cookie": "token=at",
-        "host": "iaq4obbxnd.execute-api.us-east-1.amazonaws.com",
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-origin",
-        "user-agent": "Amazon CloudFront",
-        "via": "2.0 9b77256cb4a2caf313b1650e5e0805f8.cloudfront.net (CloudFront)",
-        "x-amz-cf-id": "JFcl6VOiYYuYKkLx5PbdGGtE6IunL9R6AgVqKt1Rt1zp22mciTsnKA==",
-        "x-amzn-trace-id": "Root=1-6461524b-36aae9f52033a6a24b43859e",
-        "x-forwarded-for": "87.196.72.103, 64.252.170.145",
-        "x-forwarded-port": "443",
-        "x-forwarded-proto": "https",
-    },
+    "cookies": ["cookie2=yum", "__Host-token=gho_cAHumzvdbT", "cookie3=ugh"],
     "requestContext": {
         "accountId": "193347341732",
         "apiId": "iaq4obbxnd",
@@ -83,6 +67,21 @@ api_pr_info_event = {
         "stage": "api",
         "time": "14/May/2023:21:27:39 +0000",
         "timeEpoch": 1684099659054,
+    },
+}
+
+api_status_event = {
+    "type": "REQUEST",
+    "routeArn": "arn:aws:execute-api:us-east-1::iaq4obbxnd/api/GET/status",
+    "identitySource": ["__Host-token=gho_cAHumzvdbT; cookie2=yum; cookie3=ugh"],
+    "rawPath": "/api/status",
+    "rawQueryString": "",
+    "cookies": ["cookie2=yum", "__Host-token=gho_cAHumzvdbT", "cookie3=ugh"],
+    "requestContext": {
+        "http": {
+            "method": "GET",
+            "path": "/api/status",
+        },
     },
 }
 
