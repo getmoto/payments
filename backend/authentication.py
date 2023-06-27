@@ -86,7 +86,7 @@ def lambda_handler(event, context):
             }
         }
 
-    if path in ["/api/pr_info", "/api/payment_info"] and method == "GET":
+    if (path in ["/api/pr_info", "/api/payment_info"] and method == "GET") or (path == "/api/settings" and method == "POST"):
         # AUTHORIZER
         #
         # The actual logic is handled by user_area.py - here we just verify whether the user has access
