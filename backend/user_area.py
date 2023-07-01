@@ -11,7 +11,6 @@ pr_table = dynamodb.Table("PullRequests")
 user_table = dynamodb.Table("UserSettings")
 
 
-
 def lambda_handler(event, context):
     print(event)
     path, method = get_path_method(event)
@@ -46,6 +45,7 @@ def lambda_handler(event, context):
         return {}
 
     return {"message": "Hi!"}
+
 
 def get_path_method(event):
     try:
