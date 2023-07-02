@@ -27,6 +27,8 @@ redirect_uri = f"https://{domain_name}/api/logged_in"
 RFC1123 = "%a, %d %b %Y %H:%M:%S GMT"
 TOKEN_NAME = "__Host-token"
 
+ADMIN_USERS = ["bblommers", "spulec"]
+
 
 valid_access_tokens = ExpiringDict(max_len=100, max_age_seconds=60)
 
@@ -108,6 +110,40 @@ def lambda_handler(event, context):
 
                 username = json.loads(resp.data.decode('utf-8'))["login"]
                 valid_access_tokens[token] = username
+            return {
+                "isAuthorized": True,
+                "context": {
+                    "username": username
+                }
+            }
+        except Exception as e:
+            print(e)
+            return {"isAuthorized": False}
+
+    if path in ["/api/admin/finance"] and method == "GET":
+        # ADMIN AUTHORIZER
+        try:
+            token = None
+            for cookie in event["identitySource"][0].split(";"):
+                if cookie.strip().startswith(f"{TOKEN_NAME}="):
+                    token = cookie.split(f"{TOKEN_NAME}=")[-1]
+            if not token:
+                raise Exception("no")
+            if token in valid_access_tokens:
+                username = valid_access_tokens[token]
+            else:
+                resp = http.request(
+                    "GET",
+                    "https://api.github.com/user",
+                    headers={"Authorization": f"Bearer {token}"}
+                )
+
+                username = json.loads(resp.data.decode('utf-8'))["login"]
+                valid_access_tokens[token] = username
+
+            if username not in ADMIN_USERS:
+                raise Exception("no")
+
             return {
                 "isAuthorized": True,
                 "context": {

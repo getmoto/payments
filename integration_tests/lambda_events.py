@@ -11,6 +11,15 @@ get_payment_info = {
     },
 }
 
+admin_get_finance = {
+    "requestContext": {
+        "http": {
+            "method": "GET",
+            "path": "/api/admin/finance",
+        },
+    },
+}
+
 post_username = {
     "version": "2.0",
     "routeKey": "POST /settings",

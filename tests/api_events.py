@@ -1,86 +1,42 @@
 api_login_event = {
-    "version": "2.0",
-    "routeKey": "GET /login",
-    "rawPath": "/api/login",
-    "rawQueryString": "",
-    "headers": {
-        "accept-encoding": "gzip",
-        "content-length": "0",
-        "host": "xxxxxxxxxx.execute-api.eu-west-1.amazonaws.com",
-        "sec-fetch-dest": "document",
-        "sec-fetch-mode": "navigate",
-        "sec-fetch-site": "same-origin",
-        "sec-fetch-user": "?1",
-        "upgrade-insecure-requests": "1",
-        "user-agent": "Amazon CloudFront",
-        "via": "2.0 89695f3a4a3f2f2d6df76a407130856e.cloudfront.net (CloudFront)",
-        "x-amz-cf-id": "GcsXVjeqn63y5VnV8FSBN9XWfF7NPZ6HSacG91kOKcjZ7WiV8NG8kg==",
-        "x-amzn-trace-id": "Root=1-64864376-3a8e73d914c88487309d5019",
-        "x-forwarded-for": "...",
-        "x-forwarded-port": "443",
-        "x-forwarded-proto": "https",
-    },
     "requestContext": {
-        "accountId": "193347341732",
-        "apiId": "xxxxxxxxxx",
-        "domainName": "xxxxxxxxxx.execute-api.eu-west-1.amazonaws.com",
-        "domainPrefix": "xxxxxxxxxx",
         "http": {
             "method": "GET",
             "path": "/api/login",
-            "protocol": "HTTP/1.1",
-            "sourceIp": "xxx",
-            "userAgent": "Amazon CloudFront",
         },
         "requestId": "GX96jiqcDoEEJ8Q=",
-        "routeKey": "GET /login",
-        "stage": "api",
-        "time": "11/Jun/2023:21:58:14 +0000",
-        "timeEpoch": 1686520694440,
     },
-    "isBase64Encoded": False,
 }
 
 api_pr_info_event = {
-    "version": "2.0",
-    "type": "REQUEST",
-    "routeArn": "arn:aws:execute-api:us-east-1:193347341732:iaq4obbxnd/api/GET/pr_info",
     "identitySource": ["__Host-token=gho_cAHumzvdbT; cookie2=yum; cookie3=ugh"],
-    "routeKey": "GET /pr_info",
-    "rawPath": "/api/pr_info",
-    "rawQueryString": "",
     "cookies": ["cookie2=yum", "__Host-token=gho_cAHumzvdbT", "cookie3=ugh"],
     "requestContext": {
-        "accountId": "193347341732",
-        "apiId": "iaq4obbxnd",
-        "domainName": "iaq.execute-api.us-east-1.amazonaws.com",
-        "domainPrefix": "iaq4",
         "http": {
             "method": "GET",
             "path": "/api/pr_info",
-            "protocol": "HTTP/1.1",
-            "sourceIp": "87.196.72.103",
-            "userAgent": "Amazon CloudFront",
         },
-        "requestId": "E7nLxggGoAMEYyA=",
-        "routeKey": "GET /pr_info",
-        "stage": "api",
-        "time": "14/May/2023:21:27:39 +0000",
-        "timeEpoch": 1684099659054,
     },
 }
 
 api_status_event = {
-    "type": "REQUEST",
-    "routeArn": "arn:aws:execute-api:us-east-1::iaq4obbxnd/api/GET/status",
     "identitySource": ["__Host-token=gho_cAHumzvdbT; cookie2=yum; cookie3=ugh"],
-    "rawPath": "/api/status",
-    "rawQueryString": "",
     "cookies": ["cookie2=yum", "__Host-token=gho_cAHumzvdbT", "cookie3=ugh"],
     "requestContext": {
         "http": {
             "method": "GET",
             "path": "/api/status",
+        },
+    },
+}
+
+api_admin_finance_event = {
+    "identitySource": ["__Host-token=gho_cAHumzvdbT; cookie2=yum; cookie3=ugh"],
+    "cookies": ["cookie2=yum", "__Host-token=gho_cAHumzvdbT", "cookie3=ugh"],
+    "requestContext": {
+        "http": {
+            "method": "GET",
+            "path": "/api/admin/finance",
         },
     },
 }
@@ -91,109 +47,17 @@ github_oauth_event = {
     "rawPath": "/api/logged_in",
     "rawQueryString": "code=405b3178b880b1999d64&state=Ui01T1l1a3VxeGJRZ2RxNldKNGVHNExWanNCdTFYa2kybHlwM19FMkhQZWNzLUVnOHJQUk5BPT0yYWY0M2U1NS04MGQzLTRjY2YtYTBmOC00OGFiM2I2NzQyYmY%3D",
     "cookies": ["token=at"],
-    "headers": {
-        "accept-encoding": "gzip",
-        "content-length": "0",
-        "host": "iaq4obbxnd.execute-api.us-east-1.amazonaws.com",
-        "sec-fetch-dest": "document",
-        "sec-fetch-mode": "navigate",
-        "sec-fetch-site": "cross-site",
-        "upgrade-insecure-requests": "1",
-        "user-agent": "Amazon CloudFront",
-        "via": "2.0 5dacd17e64f61e2e81d7dae8a2cf2a9a.cloudfront.net (CloudFront)",
-        "x-amz-cf-id": "3G9NruN75Wo2tbHUR76ohq8mQ6XNdmGsAU9mUXQ0srwuiBqigrO-ew==",
-        "x-amzn-trace-id": "Root=1-646157d3-402e017215fe83b746872538",
-        "x-forwarded-for": "87.196.72.103, 64.252.170.145",
-        "x-forwarded-port": "443",
-        "x-forwarded-proto": "https",
-    },
     "queryStringParameters": {
         "code": "405b3178b880b1999d64",
         "state": "Ui01T1l1a3VxeGJRZ2RxNldKNGVHNExWanNCdTFYa2kybHlwM19FMkhQZWNzLUVnOHJQUk5BPT0yYWY0M2U1NS04MGQzLTRjY2YtYTBmOC00OGFiM2I2NzQyYmY=",
     },
     "requestContext": {
-        "accountId": "193347341732",
-        "apiId": "iaq4obbxnd",
-        "domainName": "iaq4obbxnd.execute-api.us-east-1.amazonaws.com",
-        "domainPrefix": "iaq4obbxnd",
         "http": {
             "method": "GET",
             "path": "/api/logged_in",
-            "protocol": "HTTP/1.1",
-            "sourceIp": "87.196.72.103",
-            "userAgent": "Amazon CloudFront",
         },
-        "requestId": "E7qpIjXloAMEYVw=",
-        "routeKey": "GET /logged_in",
-        "stage": "api",
-        "time": "14/May/2023:21:51:15 +0000",
-        "timeEpoch": 1684101075772,
     },
     "isBase64Encoded": False,
-}
-
-cf_viewer_request_event = {
-    "Records": [
-        {
-            "cf": {
-                "config": {
-                    "distributionDomainName": "d1cti9sh1yd63l.cloudfront.net",
-                    "distributionId": "E2YANEH09EVOZA",
-                    "eventType": "viewer-request",
-                    "requestId": "0ea7-_A2MJ89ejWx9a8MPgvVXPl8YuPe9LIW5Sngw389HZ58lf0MlA==",
-                },
-                "request": {
-                    "clientIp": "87.196.72.103",
-                    "headers": {
-                        "host": [
-                            {"key": "Host", "value": "d1cti9sh1yd63l.cloudfront.net"}
-                        ],
-                        "user-agent": [
-                            {
-                                "key": "User-Agent",
-                                "value": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/112.0",
-                            }
-                        ],
-                        "accept": [
-                            {
-                                "key": "accept",
-                                "value": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-                            }
-                        ],
-                        "accept-language": [
-                            {"key": "accept-language", "value": "en-GB,en;q=0.5"}
-                        ],
-                        "accept-encoding": [
-                            {"key": "accept-encoding", "value": "gzip, deflate, br"}
-                        ],
-                        "referer": [
-                            {
-                                "key": "referer",
-                                "value": "https://d1cti9sh1yd63l.cloudfront.net/",
-                            }
-                        ],
-                        "upgrade-insecure-requests": [
-                            {"key": "upgrade-insecure-requests", "value": "1"}
-                        ],
-                        "sec-fetch-dest": [
-                            {"key": "sec-fetch-dest", "value": "document"}
-                        ],
-                        "sec-fetch-mode": [
-                            {"key": "sec-fetch-mode", "value": "navigate"}
-                        ],
-                        "sec-fetch-site": [
-                            {"key": "sec-fetch-site", "value": "same-origin"}
-                        ],
-                        "sec-fetch-user": [{"key": "sec-fetch-user", "value": "?1"}],
-                        "te": [{"key": "te", "value": "trailers"}],
-                    },
-                    "method": "GET",
-                    "querystring": "",
-                    "uri": "/login.html",
-                },
-            }
-        }
-    ]
 }
 
 dynamodb_records = {

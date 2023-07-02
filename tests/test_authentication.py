@@ -157,3 +157,9 @@ class TestAuthentication:
             # Verify GH says no
             resp = authentication.lambda_handler(api_status_event, context=None)
             assert resp == {'statusCode': '403'}
+
+    def test_auth_for_unknown_path(self):
+        from backend import authentication
+
+        resp = authentication.lambda_handler(event={}, context=None)
+        assert resp == {'statusCode': '400'}

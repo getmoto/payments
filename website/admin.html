@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Moto Payments</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/main.css">
+
+    <script type="text/javascript">
+        function get_pr_info() {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "/api/admin/finance");
+            xhr.send();
+            xhr.responseType = "json";
+
+            xhr.onload = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                  const prs = xhr.response["prs"];
+                  document.getElementById("oc_balance_value").removeAttribute("aria-busy")
+                  document.getElementById("oc_balance_value").innerHTML = xhr.response["oc_balance"];
+                  document.getElementById("outstanding_payments_value").removeAttribute("aria-busy")
+                  document.getElementById("outstanding_payments_value").innerHTML = xhr.response["outstanding"];
+                  document.getElementById("effective_balance_value").removeAttribute("aria-busy")
+                  document.getElementById("effective_balance_value").innerHTML = xhr.response["effective_balance"];
+                } else {
+                  console.log(`Error: ${xhr.status}`);
+                }
+            };
+        }
+
+    </script>
+
+</head>
+<body onload="get_pr_info()">
+
+<div style="overflow: hidden;height: 100px;">
+
+    <nav class="demo">
+        <ul width="100%">
+            <li class="brand">
+                <img src="images/logo_royalblue_c.png" style="width: 3em" />
+                <h1 style="display: inline">Moto Payments</h1>
+            </li>
+        </ul>
+
+        <ul>
+            <li><a href="payments.html" class="button icon-picture hide" id="payment-menu-button">Payment Info</a></li>
+            <li><a href="faq.html" class="button icon-picture" id="faq-menu-button">FAQ</a></li>
+            <li><a href="#" onclick="logout()" class="button icon-puzzle hide" id="logout-menu-button">Logout</a></li>
+        </ul>
+    </nav>
+
+</div>
+
+<main class="container" id="main_container">
+
+    <div class="tabs">
+        <input type="radio" name="tabs" id="tab_finance_details" checked="checked">
+        <label for="tab_finance_details">Finances</label>
+        <div class="tab">
+
+            <div id="payments_wait"></div>
+
+            <div id="block_finance_details" class="">
+                <table>
+                    <thead>
+                      <tr>
+                          <th scope="col">OpenCollective Balance</th>
+                          <th scope="col">Outstanding Payments</th>
+                          <th scope="col">Effective Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <th scope="row" aria-busy="true" id="oc_balance_value"></th>
+                        <th scope="row" aria-busy="true" id="outstanding_payments_value"></th>
+                        <th scope="row" aria-busy="true" id="effective_balance_value"></th>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <input type="radio" name="tabs" id="tab_recent_prs">
+        <label for="tab_recent_prs">Recent PR's</label>
+        <div class="tab">
+
+            <div id="pr-details">
+
+                <table>
+                    <thead>
+                      <tr>
+                          <th scope="col">Contributor</th>
+                          <th scope="col">Title</th>
+                          <th scope="col"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    <tr id="recent_pr_busy_row"> <!-- To Be deleted once data comes in -->
+                        <th scope="row" aria-busy="true"></th>
+                        <th scope="row"></th>
+                        <th scope="row"></th> <!-- Award Payment -->
+                    </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+        <input type="radio" name="tabs" id="tab_recent_payments">
+        <label for="tab_recent_payments">Recent Payments</label>
+        <div class="tab">
+
+            <div id="payment-details">
+
+                <table>
+                    <thead>
+                      <tr>
+                          <th scope="col">Contributor</th>
+                          <th scope="col">Amount</th>
+                          <th scope="col">Title</th>
+                          <th scope="col">Details</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    <tr id="recent_payments_busy_row"> <!-- To Be deleted once data comes in -->
+                        <th scope="row" aria-busy="true"></th>
+                        <th scope="row"></th>
+                        <th scope="row"></th>
+                        <th scope="row"></th>
+                    </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+</body>
+</html>
