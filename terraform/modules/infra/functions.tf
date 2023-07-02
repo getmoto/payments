@@ -303,8 +303,17 @@ resource "random_uuid" "lambda_hash_admin_area" {
 
 data "archive_file" "lambda_admin_area_package" {
   depends_on = [null_resource.install_dependencies]
+  excludes   = [
+    "__init__.py",
+    "authentication.py",
+    "backup_payment_data.py",
+    "load_pr_info.py",
+    "query_github.py",
+    "requirements.txt",
+    "user_area.py"
+  ]
 
-  source_file  = "${var.lambda_root}/admin_area.py"
+  source_dir  = var.lambda_root
   output_path = "lambda_zips/${random_uuid.lambda_hash_admin_area.result}.zip"
   type        = "zip"
 }

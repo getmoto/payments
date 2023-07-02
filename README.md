@@ -22,11 +22,16 @@ Setting up a new infrastructure:
  - Create a HostedZone, and configure the name as the `root_domain`-variable of the `infrastructure`-module
  - Decide on a subdomain, and configure that as the `domain`-variable for the `infrastructure`-module
  - If you run multiple environments in the same AWS account, make sure that the `s3-prefix`-variable is different for each environment
- - Create a Github OAuth token<sup>*</sup>
- - Create three SSM parameters in the appropriate region:
+ - Create a Github OAuth token<sup>*1</sup>
+ - Create a OpenCollective 'Personal Token' <sup>*2</sup>
+ - Create the following SSM parameters in the appropriate region:
    - `/moto/payments/github/oauth/client`
    - `/moto/payments/github/oauth/secret` (SecureString)
    - `/moto/payments/tokens/github` (SecureString)
+   - `/moto/payments/tokens/open_collective` (SecureString)
 
-<sup>*</sup>The OAuth token is required to call the Github API and pull the latest PR's into our own database.
+<sup>*1</sup>The GitHub token is required to pull the latest PR's into our own database.
 Because all PR info is public, the token does not need any permissions.
+
+<sup>*2</sup>The OpenCollective token is required to fetch the current balance.
+Because this information is public, the token does not need any permissions.
