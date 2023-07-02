@@ -292,6 +292,52 @@ data "archive_file" "payment_info_backup_files" {
   type        = "zip"
 }
 
+resource "random_uuid" "lambda_hash_admin_area" {
+  keepers = {
+  for filename in setunion(
+  fileset(var.lambda_root, "admin_area.py"),
+  ) :
+  filename => filemd5("${var.lambda_root}/${filename}")
+  }
+}
+
+data "archive_file" "lambda_admin_area_package" {
+  depends_on = [null_resource.install_dependencies]
+
+  source_file  = "${var.lambda_root}/admin_area.py"
+  output_path = "lambda_zips/${random_uuid.lambda_hash_admin_area.result}.zip"
+  type        = "zip"
+}
+
+resource "aws_lambda_function" "lambda_function_admin_area" {
+  function_name = "AdminArea"
+  filename      = data.archive_file.lambda_admin_area_package.output_path
+  source_code_hash = data.archive_file.lambda_admin_area_package.output_base64sha256
+  role          = aws_iam_role.lambda_role.arn
+  runtime       = "python3.10"
+  handler       = "admin_area.lambda_handler"
+  timeout       = 5
+  depends_on = [aws_cloudwatch_log_group.lambda_admin_area]
+  environment {
+    variables = {
+      REGION = data.aws_region.current.name
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "lambda_admin_area" {
+  name              = "/aws/lambda/AdminArea"
+  retention_in_days = 7
+}
+
+resource "aws_lambda_permission" "admin_area" {
+  statement_id  = "AllowAPIGatewayToAdminArea"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda_function_admin_area.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.payments-api.execution_arn}/*/*"
+}
+
 resource "aws_iam_role" "lambda_assume_role" {
   name               = "${var.resource_prefix}lambda-dynamodb-role"
   assume_role_policy = <<EOF

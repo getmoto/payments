@@ -31,3 +31,16 @@ def test_cloudfront():
 
     # S3 and APIGateway
     assert len(distributions[0]["Origins"]["Items"]) == 2
+
+
+def test_lambda():
+    awslambda = boto3.client("lambda", "us-east-1", endpoint_url="http://localhost:5000")
+    functions = awslambda.list_functions()["Functions"]
+    function_names = [fn["FunctionName"] for fn in functions]
+
+    assert len(function_names) == 5
+    assert "Auth" in function_names
+    assert "UserArea" in function_names
+    assert "AdminArea" in function_names
+    assert "LoadPullRequestInfo" in function_names
+    assert "PaymentsTableBackup" in function_names
