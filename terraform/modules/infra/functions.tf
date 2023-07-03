@@ -308,7 +308,6 @@ data "archive_file" "lambda_admin_area_package" {
     "authentication.py",
     "backup_payment_data.py",
     "load_pr_info.py",
-    "query_github.py",
     "requirements.txt",
     "user_area.py"
   ]

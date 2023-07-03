@@ -119,4 +119,31 @@ github_user_response = {
     "html_url": "https://github.com/my_user_name",
 }
 
-github_bad_credentials = {'message': 'Bad credentials', 'documentation_url': 'https://docs.github.com/rest'}
+github_bad_credentials = {
+    "message": "Bad credentials",
+    "documentation_url": "https://docs.github.com/rest",
+}
+
+
+github_approved_prs_result = {
+    "data": {
+        "search": {
+            "edges": [
+                {
+                    "node": {
+                        "number": 6460,
+                        "title": "Title 1",
+                        "author": {"login": "author1"},
+                    }
+                },
+                {
+                    "node": {
+                        "number": 6449,
+                        "title": "Title 2",
+                        "author": {"login": "author2"},
+                    }
+                }
+            ]
+        }
+    }
+}

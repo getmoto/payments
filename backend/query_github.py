@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from string import Template
 from typing import Dict
 import json
@@ -48,6 +49,24 @@ class QueryGithub:
             }
             """)
 
+        GET_APPROVED_PRS = Template("""
+            {
+              search(query: "repo:getmoto/moto is:pr review:approved updated:>$SINCE" type:ISSUE last:25) {
+                edges {
+                  node {
+                    ... on PullRequest {
+                      number
+                      title
+                      author {
+                        login
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """)
+
     URL = "https://api.github.com/graphql"
 
     @classmethod
@@ -63,6 +82,17 @@ class QueryGithub:
             new_nodes, page = cls._get_pr_page(page, since, token)
             nodes.extend(new_nodes)
         return sorted(nodes, key=lambda y: y["updatedAt"])
+
+    @classmethod
+    def get_approved_prs(cls, token: str):
+        """
+        Returns the 25 most recent Approved PR's from the last 4 weeks
+        """
+        now = datetime.now()
+        four_weeks = now - timedelta(weeks=4)
+        query = {"query": QueryGithub.Queries.GET_APPROVED_PRS.substitute(SINCE=four_weeks.strftime("%Y-%m-%d"))}
+        result = cls._execute(query, token)["data"]["search"]["edges"]
+        return [res["node"] for res in result]
 
     @classmethod
     def _get_pr_page(cls, page, since, token):

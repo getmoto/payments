@@ -58,6 +58,7 @@ jobs:
           touch ~/.aws/config && echo -e "[default]\nregion = us-east-1" > ~/.aws/config
           aws route53 create-hosted-zone --name getmoto.org --caller-ref x --endpoint-url http://localhost:5000
           aws ssm put-parameter --name "/moto/payments/tokens/open_collective" --value test --type SecureString --endpoint-url http://localhost:5000
+          aws ssm put-parameter --name "/moto/payments/tokens/github" --value gh_token --type SecureString --endpoint-url http://localhost:5000
           cd terraform/envs/test
           ls -la
           cat provider.tf
