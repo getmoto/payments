@@ -39,5 +39,4 @@ class QueryOpenCollective:
             body=json.dumps(query),
             headers={"Personal-Token": token, "content-type": "application/json"}
         )
-        print(resp.data)
         return json.loads(resp.data.decode('utf-8'))

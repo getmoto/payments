@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/main.css">
 
     <script type="text/javascript">
-        function get_pr_info() {
+        function get_balance_info() {
             const xhr = new XMLHttpRequest();
             xhr.open("GET", "/api/admin/finance");
             xhr.send();
@@ -23,6 +23,27 @@
                   document.getElementById("outstanding_payments_value").innerHTML = xhr.response["outstanding"];
                   document.getElementById("effective_balance_value").removeAttribute("aria-busy")
                   document.getElementById("effective_balance_value").innerHTML = xhr.response["effective_balance"];
+
+                  get_approved_prs();
+                } else {
+                  window.location.href = 'index.html'
+                }
+            };
+        }
+
+        function get_approved_prs() {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "/api/admin/approved_prs");
+            xhr.send();
+            xhr.responseType = "json";
+
+            xhr.onload = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                  console.log(xhr.response);
+                  document.getElementById("recent_pr_busy_row").remove()
+                  xhr.response.forEach((node) => {
+                   document.getElementById("approved_pr_table_body").innerHTML += "<tr><th scope='row'>" + node["author"]["login"] + "</th><th scope='row'>" + node["title"] + "</th><th scope='row'><a href='/approve.html?pr_nr=" + node["number"] + "'>Approve</a>></th></tr>"
+                  });
                 } else {
                   console.log(`Error: ${xhr.status}`);
                 }
@@ -32,7 +53,7 @@
     </script>
 
 </head>
-<body onload="get_pr_info()">
+<body onload="get_balance_info()">
 
 <div style="overflow: hidden;height: 100px;">
 
@@ -97,7 +118,7 @@
                           <th scope="col"></th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="approved_pr_table_body">
                     <tr id="recent_pr_busy_row"> <!-- To Be deleted once data comes in -->
                         <th scope="row" aria-busy="true"></th>
                         <th scope="row"></th>

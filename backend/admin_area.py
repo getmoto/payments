@@ -1,6 +1,7 @@
 import boto3
 import os
 from query_opencollective import QueryOpenCollective
+from query_github import QueryGithub
 
 
 region = os.getenv("REGION")
@@ -11,6 +12,7 @@ user_table = dynamodb.Table("UserSettings")
 
 ssm = boto3.client("ssm", region)
 open_collective_token = None
+github_token = None
 
 
 def lambda_handler(event, context):
@@ -22,6 +24,9 @@ def lambda_handler(event, context):
         outstanding_payments = get_outstanding_payments()
         effective_balance = oc_balance - outstanding_payments
         return {"oc_balance": "${:.2f}".format(oc_balance), "outstanding": "${:.2f}".format(outstanding_payments), "effective_balance": "${:.2f}".format(effective_balance)}
+
+    if path == "/api/admin/approved_prs" and method == "GET":
+        return get_approved_prs()
 
     return {"message": "Unauthorized"}
 
@@ -43,6 +48,13 @@ def get_oc_balance():
     if open_collective_token is None:
         open_collective_token = ssm.get_parameter(Name="/moto/payments/tokens/open_collective", WithDecryption=True)["Parameter"]["Value"]
     return QueryOpenCollective.get_balance(open_collective_token)
+
+
+def get_approved_prs():
+    global github_token
+    if github_token is None:
+        github_token = ssm.get_parameter(Name="/moto/payments/tokens/github", WithDecryption=True)["Parameter"]["Value"]
+    return QueryGithub.get_approved_prs(github_token)
 
 
 def get_path_method(event):

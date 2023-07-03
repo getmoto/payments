@@ -2,7 +2,7 @@ import boto3
 import json
 from backend import admin_area
 from unittest.mock import patch, Mock
-from .lambda_events import admin_get_finance
+from .lambda_events import admin_get_finance, admin_get_approved_prs
 
 
 OPEN_COLLECTIVE_RESPONSE = {
@@ -20,7 +20,7 @@ OPEN_COLLECTIVE_RESPONSE = {
 }
 
 
-class TestUserArea:
+class TestAdminArea:
     def setup_method(self):
         self.ddb = boto3.client(
             "dynamodb", "us-east-1", endpoint_url="http://localhost:5000"
@@ -82,6 +82,18 @@ class TestUserArea:
 
             resp = admin_area.lambda_handler(admin_get_finance, context=None)
             assert resp == {'effective_balance': '$20.00', 'oc_balance': "$50.00", 'outstanding': '$30.00'}
+
+    def test_get_approved_prs(self):
+        assert admin_area.github_token is None
+        with patch("query_github.QueryGithub.get_approved_prs", return_value=Mock()) as mock_gh:
+            mock_gh.return_value = [{"return": "data"}]
+
+            resp = admin_area.lambda_handler(admin_get_approved_prs, context=None)
+            assert resp == [{"return": "data"}]
+
+            assert admin_area.github_token == "gh_token"
+
+            mock_gh.call_args.args == ("gh_token",)
 
     def test_unknown_path(self):
         resp = admin_area.lambda_handler(event={}, context=None)

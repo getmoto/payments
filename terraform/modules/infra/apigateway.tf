@@ -67,6 +67,21 @@ resource "aws_apigatewayv2_route" "admin_get_finance_route" {
   authorizer_id = aws_apigatewayv2_authorizer.authorize_user_area.id
 }
 
+resource "aws_apigatewayv2_integration" "admin_get_approved_prs_route" {
+  api_id                 = aws_apigatewayv2_api.payments-api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.lambda_function_admin_area.arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "admin_get_approved_prs_route" {
+  api_id    = aws_apigatewayv2_api.payments-api.id
+  route_key = "GET /admin/approved_prs"
+  target    = "integrations/${aws_apigatewayv2_integration.admin_get_approved_prs_route.id}"
+  authorization_type = "CUSTOM"
+  authorizer_id = aws_apigatewayv2_authorizer.authorize_user_area.id
+}
+
 resource "aws_apigatewayv2_integration" "get_status_route" {
   api_id                 = aws_apigatewayv2_api.payments-api.id
   integration_type       = "AWS_PROXY"

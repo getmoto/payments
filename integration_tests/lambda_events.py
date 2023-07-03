@@ -20,6 +20,15 @@ admin_get_finance = {
     },
 }
 
+admin_get_approved_prs = {
+    "requestContext": {
+        "http": {
+            "method": "GET",
+            "path": "/api/admin/approved_prs",
+        },
+    },
+}
+
 post_username = {
     "version": "2.0",
     "routeKey": "POST /settings",

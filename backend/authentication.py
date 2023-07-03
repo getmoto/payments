@@ -120,7 +120,7 @@ def lambda_handler(event, context):
             print(e)
             return {"isAuthorized": False}
 
-    if path in ["/api/admin/finance"] and method == "GET":
+    if path in ["/api/admin/finance", "/api/admin/approved_prs"] and method == "GET":
         # ADMIN AUTHORIZER
         try:
             token = None
