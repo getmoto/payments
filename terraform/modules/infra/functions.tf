@@ -4,6 +4,36 @@ variable "lambda_root" {
   default     = "../../../backend/"
 }
 
+variable "repo_owner_name" {
+  type        = string
+}
+
+resource "null_resource" "install_jwt_dependencies" {
+  provisioner "local-exec" {
+    command = "pip install --platform manylinux2010_x86_64 --implementation cp --python 3.10 --only-binary=:all: --upgrade --target ${var.lambda_root}/jwt_dependencies/python jwt cryptography"
+  }
+
+  triggers = {
+    always_run = "20230712"
+  }
+}
+
+data "archive_file" "lambda_jwt_layer" {
+  depends_on = [null_resource.install_jwt_dependencies]
+
+  source_dir  = "${var.lambda_root}/jwt_dependencies"
+  output_path = "lambda_zips/jwt_layer.zip"
+  type        = "zip"
+}
+
+resource "aws_lambda_layer_version" "jwt_layer" {
+  depends_on = [data.archive_file.lambda_jwt_layer]
+  filename   = data.archive_file.lambda_jwt_layer.output_path
+  layer_name = "jwt_dependencies_2"
+
+  compatible_runtimes = ["python3.10"]
+}
+
 data "aws_iam_policy_document" "lambda_assume_role_policy"{
   statement {
     effect  = "Allow"
@@ -61,7 +91,8 @@ data "aws_iam_policy_document" "lambda_service_access" {
     effect = "Allow"
 
     actions = [
-      "ssm:GetParameter"
+      "ssm:GetParameter",
+      "ssm:GetParametersByPath"
     ]
 
     resources = ["*"]
@@ -85,17 +116,6 @@ resource "aws_iam_role" "lambda_role" {
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
 }
 
-resource "null_resource" "install_dependencies" {
-  provisioner "local-exec" {
-    command = "pip install -r ${var.lambda_root}/requirements.txt -t ${var.lambda_root}/"
-  }
-
-  triggers = {
-    dependencies_versions = filemd5("${var.lambda_root}/requirements.txt")
-    source_versions = filemd5("${var.lambda_root}/load_pr_info.py")
-  }
-}
-
 resource "random_uuid" "lambda_hash_load_pr_info" {
   keepers = {
   for filename in setunion(
@@ -108,7 +128,6 @@ resource "random_uuid" "lambda_hash_load_pr_info" {
 }
 
 data "archive_file" "lambda_load-pr_package" {
-  depends_on = [null_resource.install_dependencies]
   excludes   = [
     "authentication.py",
     "backup_payment_data.py",
@@ -135,6 +154,7 @@ resource "aws_lambda_function" "lambda_function_load_pr_info" {
       REGION = data.aws_region.current.name
       PR_TABLE_NAME = aws_dynamodb_table.pull-requests.name
       SCRIPT_INFO_TABLE_NAME = aws_dynamodb_table.script-execution-info.name
+      REPO_OWNER_NAME = var.repo_owner_name
     }
   }
   depends_on = [aws_cloudwatch_log_group.lambda_load_pr_info]
@@ -175,7 +195,6 @@ resource "random_uuid" "lambda_hash_auth" {
 }
 
 data "archive_file" "lambda_auth_package" {
-  depends_on = [null_resource.install_dependencies]
   excludes   = [
     "__init__.py",
     "backup_payment_data.py",
@@ -198,11 +217,12 @@ resource "aws_lambda_function" "lambda_function_auth" {
   runtime       = "python3.9"
   handler       = "authentication.lambda_handler"
   timeout       = 5
-  depends_on = [aws_cloudwatch_log_group.lambda_auth]
+  depends_on    = [aws_cloudwatch_log_group.lambda_auth]
   environment {
     variables = {
       REGION = data.aws_region.current.name
       DOMAIN_NAME = var.domain
+      REPO_OWNER_NAME = var.repo_owner_name
     }
   }
 }
@@ -230,8 +250,6 @@ resource "random_uuid" "lambda_hash_user_area" {
 }
 
 data "archive_file" "lambda_user_area_package" {
-  depends_on = [null_resource.install_dependencies]
-
   source_file  = "${var.lambda_root}/user_area.py"
   output_path = "lambda_zips/${random_uuid.lambda_hash_user_area.result}.zip"
   type        = "zip"
@@ -245,10 +263,11 @@ resource "aws_lambda_function" "lambda_function_user_area" {
   runtime       = "python3.10"
   handler       = "user_area.lambda_handler"
   timeout       = 5
-  depends_on = [aws_cloudwatch_log_group.lambda_user_area]
+  depends_on    = [aws_cloudwatch_log_group.lambda_user_area]
   environment {
     variables = {
       REGION = data.aws_region.current.name
+      REPO_OWNER_NAME = var.repo_owner_name
     }
   }
 }
@@ -273,7 +292,7 @@ resource "aws_lambda_function" "payments_info_backup" {
   handler          = "backup_payment_data.handler"
   role             = aws_iam_role.lambda_assume_role.arn
   runtime          = "python3.8"
-  depends_on = [aws_cloudwatch_log_group.payments_backup]
+  depends_on       = [aws_cloudwatch_log_group.payments_backup]
   environment {
     variables = {
       BACKUP_BUCKET_NAME = aws_s3_bucket.website-backup.bucket
@@ -302,7 +321,6 @@ resource "random_uuid" "lambda_hash_admin_area" {
 }
 
 data "archive_file" "lambda_admin_area_package" {
-  depends_on = [null_resource.install_dependencies]
   excludes   = [
     "__init__.py",
     "authentication.py",
@@ -324,11 +342,13 @@ resource "aws_lambda_function" "lambda_function_admin_area" {
   role          = aws_iam_role.lambda_role.arn
   runtime       = "python3.10"
   handler       = "admin_area.lambda_handler"
-  timeout       = 5
-  depends_on = [aws_cloudwatch_log_group.lambda_admin_area]
+  timeout       = 10
+  depends_on    = [aws_cloudwatch_log_group.lambda_admin_area]
+  layers        = [aws_lambda_layer_version.jwt_layer.arn]
   environment {
     variables = {
       REGION = data.aws_region.current.name
+      REPO_OWNER_NAME = var.repo_owner_name
     }
   }
 }

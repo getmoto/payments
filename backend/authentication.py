@@ -120,7 +120,8 @@ def lambda_handler(event, context):
             print(e)
             return {"isAuthorized": False}
 
-    if path in ["/api/admin/finance", "/api/admin/approved_prs"] and method == "GET":
+    get_paths = ["/api/admin/finance", "/api/admin/contributors", "/api/admin/contributor"]
+    if (path in get_paths and method == "GET") or (path in ["/api/admin/invite"] and method == "POST"):
         # ADMIN AUTHORIZER
         try:
             token = None
@@ -128,7 +129,7 @@ def lambda_handler(event, context):
                 if cookie.strip().startswith(f"{TOKEN_NAME}="):
                     token = cookie.split(f"{TOKEN_NAME}=")[-1]
             if not token:
-                raise Exception("no")
+                raise Exception("no token provided")
             if token in valid_access_tokens:
                 username = valid_access_tokens[token]
             else:
@@ -142,7 +143,7 @@ def lambda_handler(event, context):
                 valid_access_tokens[token] = username
 
             if username not in ADMIN_USERS:
-                raise Exception("no")
+                raise Exception("user not in admin-list")
 
             return {
                 "isAuthorized": True,

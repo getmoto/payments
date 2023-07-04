@@ -20,6 +20,7 @@ module "infrastructure" {
   root_domain = "getmoto.org"
   domain = "payments.getmoto.org"
   cloudfront_ttl = 604800  # one week
+  repo_owner_name = "getmoto/moto"
   providers = {
     aws.useast1 = aws.useast1
   }

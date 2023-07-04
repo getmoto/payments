@@ -7,11 +7,7 @@ from threading import RLock
 import sys
 from typing import Any, Union
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    # Python < 2.7
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 
 class ExpiringDict(OrderedDict):
