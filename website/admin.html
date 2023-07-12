@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>Moto Payments</title>
+    <title>Moto Payments - Admin Area</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/main.css">
@@ -24,26 +24,29 @@
                   document.getElementById("effective_balance_value").removeAttribute("aria-busy")
                   document.getElementById("effective_balance_value").innerHTML = xhr.response["effective_balance"];
 
-                  get_approved_prs();
+                  get_contributors();
                 } else {
                   window.location.href = 'index.html'
                 }
             };
         }
 
-        function get_approved_prs() {
+        function get_contributors() {
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", "/api/admin/approved_prs");
+            xhr.open("GET", "/api/admin/contributors");
             xhr.send();
             xhr.responseType = "json";
 
             xhr.onload = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
-                  console.log(xhr.response);
-                  document.getElementById("recent_pr_busy_row").remove()
-                  xhr.response.forEach((node) => {
-                   document.getElementById("approved_pr_table_body").innerHTML += "<tr><th scope='row'>" + node["author"]["login"] + "</th><th scope='row'>" + node["title"] + "</th><th scope='row'><a href='/approve.html?pr_nr=" + node["number"] + "'>Approve</a>></th></tr>"
-                  });
+                  document.getElementById("recent_pr_busy_row").remove();
+                  for (var author in xhr.response) {
+                    pr_links = ""
+                    for (let i = 0; i < xhr.response[author].length; i++) {
+                      pr_links += "<a href='https://github.com/getmoto/moto/pull/" + xhr.response[author][i]["number"] + "'>" + xhr.response[author][i]["title"] + "</a><br />";
+                    }
+                    document.getElementById("approved_pr_table_body").innerHTML += "<tr><td scope='row'>" + author + "</td><td scope='row'>" + pr_links + "</td><td scope='row'><a href='/invite.html?author=" + author + "'>Approve</a></td></tr>";
+                  }
                 } else {
                   console.log(`Error: ${xhr.status}`);
                 }
@@ -105,7 +108,7 @@
         </div>
 
         <input type="radio" name="tabs" id="tab_recent_prs">
-        <label for="tab_recent_prs">Recent PR's</label>
+        <label for="tab_recent_prs">Recent Contributors</label>
         <div class="tab">
 
             <div id="pr-details">
@@ -114,7 +117,7 @@
                     <thead>
                       <tr>
                           <th scope="col">Contributor</th>
-                          <th scope="col">Title</th>
+                          <th scope="col">PR's</th>
                           <th scope="col"></th>
                       </tr>
                     </thead>

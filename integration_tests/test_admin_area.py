@@ -1,8 +1,11 @@
+import copy
+
 import boto3
 import json
-from backend import admin_area
+from backend import admin_area, github_bot
 from unittest.mock import patch, Mock
-from .lambda_events import admin_get_finance, admin_get_approved_prs
+from .lambda_events import admin_get_finance, admin_get_contributors, admin_get_contributor
+from .lambda_events import admin_invite
 
 
 OPEN_COLLECTIVE_RESPONSE = {
@@ -17,6 +20,60 @@ OPEN_COLLECTIVE_RESPONSE = {
             }
         }
     }
+}
+
+GITHUB_CONTRIBUTOR_RESPONSE = {
+  "data": {
+    "search": {
+      "edges": [
+        {
+          "node": {
+            "merged": True,
+            "number": 6479,
+            "title": "Title of PR 1",
+            "updatedAt": "2023-07-04T16:59:28Z",
+            "state": "MERGED",
+            "isDraft": False,
+            "closed": True,
+            "labels": {
+              "edges": []
+            }
+          }
+        }
+        ]
+    }
+  }
+}
+
+GITHUB_CONTRIBUTORS_RESPONSE = {
+  "data": {
+    "search": {
+      "edges": [
+        {
+          "node": {
+            "number": 6475,
+            "title": "Title of PR 1",
+            "author": {"login": "author_1"}
+          }},{
+          "node": {
+            "number": 6476,
+            "title": "Title of PR 2",
+            "author": {"login": "author_1"}
+          }},{
+          "node": {
+            "number": 6477,
+            "title": "Title of PR 3",
+            "author": {"login": "author_2"}
+          }},{
+          "node": {
+            "number": 6478,
+            "title": "Title of PR 4",
+            "author": {"login": "author_3"}
+          }
+        }
+      ]
+    }
+  }
 }
 
 
@@ -36,6 +93,7 @@ class TestAdminArea:
         admin_area.payment_table = ddb_resource.Table(admin_area.payment_table.name)
         admin_area.user_table = ddb_resource.Table(admin_area.user_table.name)
         admin_area.ssm = ssm
+        github_bot.GithubBot.ssm = ssm
 
         # Clean tables to make sure we don't have any shared data between tests
         for item in admin_area.payment_table.scan()["Items"]:
@@ -83,18 +141,74 @@ class TestAdminArea:
             resp = admin_area.lambda_handler(admin_get_finance, context=None)
             assert resp == {'effective_balance': '$20.00', 'oc_balance': "$50.00", 'outstanding': '$30.00'}
 
-    def test_get_approved_prs(self):
+    def test_get_contributors(self):
         assert admin_area.github_token is None
-        with patch("query_github.QueryGithub.get_approved_prs", return_value=Mock()) as mock_gh:
-            mock_gh.return_value = [{"return": "data"}]
+        with patch("query_github.QueryGithub._execute", return_value=Mock()) as mock_gh:
+            mock_gh.return_value = GITHUB_CONTRIBUTORS_RESPONSE
 
-            resp = admin_area.lambda_handler(admin_get_approved_prs, context=None)
-            assert resp == [{"return": "data"}]
+            resp = admin_area.lambda_handler(admin_get_contributors, context=None)
+            assert resp == {'author_1': [{'number': 6475, 'title': 'Title of PR 1'},
+                                         {'number': 6476, 'title': 'Title of PR 2'}],
+                            'author_2': [{'number': 6477, 'title': 'Title of PR 3'}],
+                            'author_3': [{'number': 6478, 'title': 'Title of PR 4'}]}
 
             assert admin_area.github_token == "gh_token"
 
-            mock_gh.call_args.args == ("gh_token",)
+    def test_get_contributor(self):
+        with patch("query_github.QueryGithub._execute", return_value=Mock()) as mock_gh:
+            mock_gh.return_value = GITHUB_CONTRIBUTOR_RESPONSE
 
-    def test_unknown_path(self):
+            resp = admin_area.lambda_handler(admin_get_contributor, context=None)
+            assert resp == {'prs': [{'closed': True,
+                                      'isDraft': False,
+                                      'labels': {'edges': []},
+                                      'merged': True,
+                                      'number': 6479,
+                                      'state': 'MERGED',
+                                      'title': 'Title of PR 1',
+                                      'updatedAt': '2023-07-04T16:59:28Z'}],
+                            "payments": []}
+
+    def test_invite(self):
+        with patch("github_bot.GithubBot.notify_user", return_value=Mock()) as github_notifier:
+            resp = admin_area.lambda_handler(admin_invite, context=None)
+            _, kwargs = github_notifier.call_args
+            assert kwargs == {"notification_text": "some text", "pr_number": "1"}
+        assert resp == {}
+
+        database_items = admin_area.payment_table.scan()["Items"]
+        assert len(database_items) == 1
+        assert database_items[0]["username"] == "user_name"
+        assert database_items[0]["amount"] == "22"
+        assert database_items[0]["title"] == "Development Moto"
+        assert database_items[0]["details"] == "Development of ..."
+        assert database_items[0]["updatedBy"] == "bblommers"
+        assert "date_created" in database_items[0]
+
+        with patch("query_github.QueryGithub._execute", return_value=Mock()) as mock_gh:
+            mock_gh.return_value = GITHUB_CONTRIBUTOR_RESPONSE
+
+            resp = admin_area.lambda_handler(admin_get_contributor, context=None)
+            assert len(resp["payments"]) == 1
+            assert resp["payments"][0]["amount"] == "22"
+            assert resp["payments"][0]["details"] == "Development of ..."
+            assert resp["payments"][0]["title"] == "Development Moto"
+
+    def test_invite_without_notification(self):
+        event = copy.deepcopy(admin_invite)
+        body = json.loads(event["body"])
+        del body["pr_notification"]
+        event["body"] = json.dumps(body)
+        resp = admin_area.lambda_handler(event, context=None)
+        assert resp == {}
+
+        database_items = admin_area.payment_table.scan()["Items"]
+        assert len(database_items) == 1
+
+    def test_unknown_caller(self):
         resp = admin_area.lambda_handler(event={}, context=None)
         assert resp == {'message': 'Unauthorized'}
+
+    def test_unknown_path(self):
+        resp = admin_area.lambda_handler(event={"requestContext": {"authorizer": {"lambda": {"username": "asd"}}}}, context=None)
+        assert resp == {'message': 'Unknown'}

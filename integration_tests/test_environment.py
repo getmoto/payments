@@ -21,7 +21,7 @@ def test_apigateway():
     apigw = boto3.client("apigatewayv2", "us-east-1", endpoint_url="http://localhost:5000")
     apis = apigw.get_apis()["Items"]
     api_names = [api["Name"] for api in apis]
-    assert api_names == ["payments-api"]
+    assert api_names == ["payments-api-2"]
 
 
 def test_cloudfront():

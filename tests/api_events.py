@@ -125,7 +125,7 @@ github_bad_credentials = {
 }
 
 
-github_approved_prs_result = {
+github_contributors_result = {
     "data": {
         "search": {
             "edges": [

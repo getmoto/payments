@@ -13,6 +13,7 @@ get_payment_info = {
 
 admin_get_finance = {
     "requestContext": {
+        "authorizer": {"lambda": {"username": "bblommers"}},
         "http": {
             "method": "GET",
             "path": "/api/admin/finance",
@@ -20,13 +21,36 @@ admin_get_finance = {
     },
 }
 
-admin_get_approved_prs = {
+admin_get_contributors = {
     "requestContext": {
+        "authorizer": {"lambda": {"username": "bblommers"}},
         "http": {
             "method": "GET",
-            "path": "/api/admin/approved_prs",
+            "path": "/api/admin/contributors",
         },
     },
+}
+
+admin_get_contributor = {
+    "rawQueryString": "author=user_name",
+    "requestContext": {
+        "authorizer": {"lambda": {"username": "bblommers"}},
+        "http": {
+            "method": "GET",
+            "path": "/api/admin/contributor",
+        },
+    },
+}
+
+admin_invite = {
+    "requestContext": {
+        "authorizer": {"lambda": {"username": "bblommers"}},
+        "http": {
+            "method": "POST",
+            "path": "/api/admin/invite",
+        },
+    },
+    "body": '{"username":"user_name","amount":"22","title":"Development Moto","details":"Development of ...", "pr_notification": "1", "pr_text": "some text"}',
 }
 
 post_username = {
