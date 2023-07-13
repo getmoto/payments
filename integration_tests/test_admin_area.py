@@ -105,14 +105,17 @@ class TestAdminArea:
             mock_http.return_value.data = json.dumps(OPEN_COLLECTIVE_RESPONSE).encode("utf-8")
 
             resp = admin_area.lambda_handler(admin_get_finance, context=None)
-            assert resp == {'effective_balance': '$50.00', 'oc_balance': "$50.00", 'outstanding': '$0.00'}
+            assert resp == {
+                "finance": {'effective_balance': '$50.00', 'oc_balance': "$50.00", 'outstanding': '$0.00'},
+                "payments": []
+            }
 
     def test_get_finance_data(self):
         self.ddb.put_item(
             TableName="Payments",
             Item={
                 "username": {"S": "a1"},
-                "date_created": {"S": "b1"},
+                "date_created": {"S": "20230607181200"},
                 "amount": {"S": "$25.00"},
             },
         )
@@ -121,25 +124,31 @@ class TestAdminArea:
             Item={
                 "username": {"S": "a2"},
                 "date_created": {"S": "b2"},
-                "amount": {"S": "$100.00"},
-                # This item should be skipped, as the 'processed' attribute indicate it is not outstanding
-                # PROD values will have a dict with details, but that's irrelevant
+                # PROD values will have a dict with details, but the exact layout is only relevant for the FE
                 "processed": {"S": "yes"},
             },
         )
         self.ddb.put_item(
             TableName="Payments",
-            Item={
-                "username": {"S": "a2"},
-                "date_created": {"S": "b2"},
-                "amount": {"S": "$5.00"},
-            },
+            Item={"username": {"S": "a2"}, "date_created": {"S": "20230607181200"}, "amount": {"S": "$5.00"}},
+        )
+        self.ddb.put_item(
+            TableName="Payments",
+            Item={"username": {"S": "a2"}, "date_created": {"S": "20230607191200"}, "amount": {"S": "$10.00"},
+                  "details": {"S": "money for reasons"}},
         )
         with patch("query_opencollective.http.request", return_value=Mock()) as mock_http:
             mock_http.return_value.data = json.dumps(OPEN_COLLECTIVE_RESPONSE).encode("utf-8")
 
             resp = admin_area.lambda_handler(admin_get_finance, context=None)
-            assert resp == {'effective_balance': '$20.00', 'oc_balance': "$50.00", 'outstanding': '$30.00'}
+            assert resp == {
+                "finance": {'effective_balance': '$10.00', 'oc_balance': "$50.00", 'outstanding': '$40.00'},
+                "payments": [
+                    {'amount': '$25.00', 'date_created': '20230607181200', 'username': 'a1'},
+                    {'date_created': 'b2', 'processed': 'yes', 'username': 'a2'},
+                    {'amount': '$5.00', 'date_created': '20230607181200', 'username': 'a2'},
+                    {'amount': '$10.00', 'date_created': '20230607191200', 'details': 'money for reasons', 'username': 'a2'}]
+            }
 
     def test_get_contributors(self):
         assert admin_area.github_token is None

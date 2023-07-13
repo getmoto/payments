@@ -6,6 +6,7 @@ from datetime import datetime
 from query_opencollective import QueryOpenCollective
 from query_github import QueryGithub
 from github_bot import GithubBot
+from typing import Dict, List
 
 
 region = os.getenv("REGION")
@@ -30,9 +31,11 @@ def lambda_handler(event, context):
     if path == "/api/admin/finance" and method == "GET":
 
         oc_balance = get_oc_balance()
-        outstanding_payments = get_outstanding_payments()
-        effective_balance = oc_balance - outstanding_payments
-        return {"oc_balance": "${:.2f}".format(oc_balance), "outstanding": "${:.2f}".format(outstanding_payments), "effective_balance": "${:.2f}".format(effective_balance)}
+        all_payments = get_all_payments()
+        outstanding_amount = _get_outstanding_amount(all_payments)
+        effective_balance = oc_balance - outstanding_amount
+        finance = {"oc_balance": "${:.2f}".format(oc_balance), "outstanding": "${:.2f}".format(outstanding_amount), "effective_balance": "${:.2f}".format(effective_balance)}
+        return {"finance": finance, "payments": all_payments}
 
     if path == "/api/admin/contributors" and method == "GET":
         return get_contributors()
@@ -55,19 +58,10 @@ def lambda_handler(event, context):
     return {"message": "Unknown"}
 
 
-def get_outstanding_payments() -> str:
-    items = payment_table.scan(
-        ProjectionExpression="amount",
-        FilterExpression="attribute_not_exists(#processed)",
-        ExpressionAttributeNames={"#processed": "processed"}
-    )["Items"]
-    amount = 0.0
-    for item in items:
-        try:
-            amount += float(item["amount"][1:])
-        except:
-            pass
-    return amount
+def get_all_payments() -> List[Dict[str, str]]:
+    # TODO: sort this. Manually? GSI with date as PK?
+    # If we have date as PK, we should store seconds as well - not just minutes
+    return payment_table.scan()["Items"]
 
 
 def get_oc_balance():
@@ -114,3 +108,14 @@ def get_path_method(event):
         pass
 
     return None, None
+
+
+def _get_outstanding_amount(all_payments: List[Dict[str, str]]) -> float:
+    amount = 0.0
+    for item in all_payments:
+        try:
+            if "processed" not in item:
+                amount += float(item["amount"][1:])
+        except:
+            pass
+    return amount
