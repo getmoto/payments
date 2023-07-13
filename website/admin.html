@@ -18,11 +18,23 @@
                 if (xhr.readyState == 4 && xhr.status == 200) {
                   const prs = xhr.response["prs"];
                   document.getElementById("oc_balance_value").removeAttribute("aria-busy")
-                  document.getElementById("oc_balance_value").innerHTML = xhr.response["oc_balance"];
+                  document.getElementById("oc_balance_value").innerHTML = xhr.response["finance"]["oc_balance"];
                   document.getElementById("outstanding_payments_value").removeAttribute("aria-busy")
-                  document.getElementById("outstanding_payments_value").innerHTML = xhr.response["outstanding"];
+                  document.getElementById("outstanding_payments_value").innerHTML = xhr.response["finance"]["outstanding"];
                   document.getElementById("effective_balance_value").removeAttribute("aria-busy")
-                  document.getElementById("effective_balance_value").innerHTML = xhr.response["effective_balance"];
+                  document.getElementById("effective_balance_value").innerHTML = xhr.response["finance"]["effective_balance"];
+
+                  document.getElementById("recent_payments_busy_row").remove()
+                  payment_details = ""
+                  for (let i = 0; i < xhr.response["payments"].length; i++) {
+                      payment = xhr.response["payments"][i];
+                      if ("processed" in payment) {
+                        payment_details += `<tr><th scope="row"><a href="invite.html?author=${ payment["username"] }">${ payment["username"] }</a></th><th scope="row">${ payment["amount"] }</th><th scope="row">${ payment["title"] }</th><th scope="row"><a href="${ payment["processed"]["order"] }">${ payment["details"] }</a></th></tr>`;
+                      } else {
+                        payment_details += `<tr><th scope="row"><a href="invite.html?author=${ payment["username"] }">${ payment["username"] }</a></th><th scope="row">${ payment["amount"] }</th><th scope="row">${ payment["title"] }</th><th scope="row">${ payment["details"] }</th></tr>`;
+                      }
+                  }
+                  document.getElementById("recent_payments_body").innerHTML += payment_details;
 
                   get_contributors();
                 } else {
@@ -86,7 +98,8 @@
 
             <div id="payments_wait"></div>
 
-            <div id="block_finance_details" class="">
+            <div id="block_finance_details">
+                <h3>Finances</h3>
                 <table>
                     <thead>
                       <tr>
@@ -103,6 +116,31 @@
                     </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <div id="payment-details">
+
+                <h3>Payments</h3>
+
+                <table>
+                    <thead>
+                      <tr>
+                          <th scope="col">Contributor</th>
+                          <th scope="col">Amount</th>
+                          <th scope="col">Title</th>
+                          <th scope="col">Details</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recent_payments_body">
+                    <tr id="recent_payments_busy_row"> <!-- To Be deleted once data comes in -->
+                        <th scope="row" aria-busy="true"></th>
+                        <th scope="row"></th>
+                        <th scope="row"></th>
+                        <th scope="row"></th>
+                    </tr>
+                    </tbody>
+                </table>
+
             </div>
 
         </div>
@@ -126,34 +164,6 @@
                         <th scope="row" aria-busy="true"></th>
                         <th scope="row"></th>
                         <th scope="row"></th> <!-- Award Payment -->
-                    </tr>
-                    </tbody>
-                </table>
-
-            </div>
-        </div>
-
-        <input type="radio" name="tabs" id="tab_recent_payments">
-        <label for="tab_recent_payments">Recent Payments</label>
-        <div class="tab">
-
-            <div id="payment-details">
-
-                <table>
-                    <thead>
-                      <tr>
-                          <th scope="col">Contributor</th>
-                          <th scope="col">Amount</th>
-                          <th scope="col">Title</th>
-                          <th scope="col">Details</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    <tr id="recent_payments_busy_row"> <!-- To Be deleted once data comes in -->
-                        <th scope="row" aria-busy="true"></th>
-                        <th scope="row"></th>
-                        <th scope="row"></th>
-                        <th scope="row"></th>
                     </tr>
                     </tbody>
                 </table>

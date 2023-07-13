@@ -139,7 +139,6 @@ class QueryGithub:
             body=json.dumps({"body": notification_text}),
             headers={"Authorization": f"Bearer {access_token}"}
         )
-        print(resp)
         print(resp.__dict__)
 
     @classmethod
