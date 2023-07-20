@@ -47,10 +47,21 @@ admin_invite = {
         "authorizer": {"lambda": {"username": "bblommers"}},
         "http": {
             "method": "POST",
-            "path": "/api/admin/invite",
+            "path": "/api/admin/payment",
         },
     },
     "body": '{"username":"user_name","amount":"22","title":"Development Moto","details":"Development of ...", "pr_notification": "1", "pr_text": "some text"}',
+}
+
+admin_retract = {
+    "requestContext": {
+        "authorizer": {"lambda": {"username": "bblommers"}},
+        "http": {
+            "method": "POST",
+            "path": "/api/admin/payment/retract",
+        },
+    },
+    "body": '{"username":"user_name","date_created":"$DATE_CREATED","reason":"asdf"}',
 }
 
 post_username = {

@@ -77,9 +77,18 @@ resource "aws_apigatewayv2_route" "admin_get_contributor" {
   authorizer_id = aws_apigatewayv2_authorizer.authorize_user_area.id
 }
 
-resource "aws_apigatewayv2_route" "admin_invite" {
+resource "aws_apigatewayv2_route" "admin_payment_new" {
   api_id    = aws_apigatewayv2_api.payments-api.id
-  route_key = "POST /admin/invite"
+  route_key = "POST /admin/payment"
+  target    = "integrations/${aws_apigatewayv2_integration.admin_area_route.id}"
+
+  authorization_type = "CUSTOM"
+  authorizer_id = aws_apigatewayv2_authorizer.authorize_user_area.id
+}
+
+resource "aws_apigatewayv2_route" "admin_payment_withdraw" {
+  api_id    = aws_apigatewayv2_api.payments-api.id
+  route_key = "POST /admin/payment/retract"
   target    = "integrations/${aws_apigatewayv2_integration.admin_area_route.id}"
 
   authorization_type = "CUSTOM"

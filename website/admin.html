@@ -29,9 +29,9 @@
                   for (let i = 0; i < xhr.response["payments"].length; i++) {
                       payment = xhr.response["payments"][i];
                       if ("processed" in payment) {
-                        payment_details += `<tr><th scope="row"><a href="invite.html?author=${ payment["username"] }">${ payment["username"] }</a></th><th scope="row">${ payment["amount"] }</th><th scope="row">${ payment["title"] }</th><th scope="row"><a href="${ payment["processed"]["order"] }">${ payment["details"] }</a></th></tr>`;
+                        payment_details += `<tr><th scope="row"><a href="details.html?author=${ payment["username"] }">${ payment["username"] }</a></th><th scope="row">${ payment["amount"] }</th><th scope="row">${ payment["title"] }</th><th scope="row"><a href="${ payment["processed"]["order"] }">${ payment["details"] }</a></th></tr>`;
                       } else {
-                        payment_details += `<tr><th scope="row"><a href="invite.html?author=${ payment["username"] }">${ payment["username"] }</a></th><th scope="row">${ payment["amount"] }</th><th scope="row">${ payment["title"] }</th><th scope="row">${ payment["details"] }</th></tr>`;
+                        payment_details += `<tr><th scope="row"><a href="details.html?author=${ payment["username"] }">${ payment["username"] }</a></th><th scope="row">${ payment["amount"] }</th><th scope="row">${ payment["title"] }</th><th scope="row">${ payment["details"] }</th></tr>`;
                       }
                   }
                   document.getElementById("recent_payments_body").innerHTML += payment_details;
@@ -57,7 +57,7 @@
                     for (let i = 0; i < xhr.response[author].length; i++) {
                       pr_links += "<a href='https://github.com/getmoto/moto/pull/" + xhr.response[author][i]["number"] + "'>" + xhr.response[author][i]["title"] + "</a><br />";
                     }
-                    document.getElementById("approved_pr_table_body").innerHTML += "<tr><td scope='row'>" + author + "</td><td scope='row'>" + pr_links + "</td><td scope='row'><a href='/invite.html?author=" + author + "'>Approve</a></td></tr>";
+                    document.getElementById("approved_pr_table_body").innerHTML += "<tr><td scope='row'>" + author + "</td><td scope='row'>" + pr_links + "</td><td scope='row'><a href='/details.html?author=" + author + "'>Details</a></td></tr>";
                   }
                 } else {
                   console.log(`Error: ${xhr.status}`);

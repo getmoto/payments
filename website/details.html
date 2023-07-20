@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Moto Payments - Invite a Contributor</title>
+    <title>Moto Payments - Contributor Details</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/main.css">
@@ -29,15 +29,41 @@
                   document.getElementById("recent_prs").innerHTML = "<table>" + pr_links + "</table>";
                 }
 
-                payments = "";
+                outstanding_payments_text = "";
+                processed_payments_text = "";
                 for (let j=0; j< xhr.response["payments"].length; j++) {
-                  payments += xhr.response["payments"][j]["title"] + " - " + xhr.response["payments"][j]["amount"] + " (" + xhr.response["payments"][j]["details"] + ")<br />";
+                  payment = xhr.response["payments"][j];
+                  if ("processed" in payment) {
+                      processed_payments_text += `<a href="${payment["processed"]["order"]}">${ payment["title"] }</a> - ${payment["amount"]} (${payment["details"]})<br />`;
+                  } else {
+                      // Details of payment
+                      outstanding_payments_text += `<tr>`;
+                      outstanding_payments_text += `<td>${ payment["title"] }</td><td>${ payment["amount"] }</td><td>${ payment["details"] }</td>`;
+                      outstanding_payments_text += `<td><a href="#" onclick="return row_expand_collapse(this)" role="button" class="outline">Options</a></td>`;
+                      outstanding_payments_text += "</tr>"
+                      // Option to Approve
+                      outstanding_payments_text += `<tr class="row-collapse">`;
+                      outstanding_payments_text += `<td colspan="3" style="border-bottom: none"><textarea class="hide_your_input hide" placeholder="Link to proof of payment, e.g. https://opencollective.com/moto/expenses/..."></textarea></td>`;
+                      outstanding_payments_text += `<td style="border-bottom: none"><a class="hide_your_input hide outline" href="#" onclick="console.log('call api'); return false" role="button" class="outline">Approved</a></td>`;
+                      outstanding_payments_text += `</tr>`;
+                      // Option to Retract
+                      outstanding_payments_text += `<tr class="row-collapse">`;
+                      outstanding_payments_text += `<td colspan="3" style="border-bottom: none"><textarea class="hide_your_input hide" placeholder="Payment offer retracted because... (Note that the user will not see retracted offers, but we do keep a record of them."></textarea></td>`;
+                      outstanding_payments_text += `<td style="border-bottom: none"><a class="hide_your_input hide outline" href="#" onclick="retract_payment(this, '${ payment["date_created"] }'); return false" role="button" style="color: red">Retract</a></td>`;
+                      outstanding_payments_text += `</tr>`;
+                  }
                 }
-                if (payments == "") {
-                  payments = "No payments yet.";
+                if (outstanding_payments_text == "") {
+                  outstanding_payments_text = "No recent payments.";
+                } else {
+                  outstanding_payments_text = `<table id="outstanding_payments_table"> ${outstanding_payments_text }</table>`;
+                }
+                if (processed_payments_text == "") {
+                  processed_payments_text = "No recent payments.";
                 }
 
-                document.getElementById("outstanding_payments").innerHTML = payments;
+                document.getElementById("outstanding_payments").innerHTML = outstanding_payments_text;
+                document.getElementById("processed_payments").innerHTML = processed_payments_text;
             } else {
               window.location.href = 'index.html'
             }
@@ -81,7 +107,7 @@
         });
 
         // Set up our request
-        XHR.open("POST", "/api/admin/invite");
+        XHR.open("POST", "/api/admin/payment");
 
         // The data sent is what the user provided in the form
         data = {"username": getQueryVariable("author"),
@@ -112,6 +138,69 @@
       document.getElementById("details").value = "Development of https://github.com/getmoto/moto/pull/" + nr;
       document.getElementById("pr_notification").value = nr
     }
+
+    function row_expand_collapse(e){
+
+      //get table id so you know what table to manipulate row from
+      const tableID = e.parentNode.parentNode.parentNode.parentNode.id;
+
+      //get row index and increment by 1 so you know what row to expand/collapse
+      const i = e.parentNode.parentNode.rowIndex + 1;
+
+      let approve_row = document.getElementById(tableID).rows[i]
+
+      if (approve_row.classList.contains('row-collapse')){
+        approve_row.classList.remove('row-collapse');
+        approve_row.classList.add('row-expand');
+        [].forEach.call(approve_row.getElementsByClassName("hide_your_input"), function(el) { el.classList.remove("hide") });
+      } else if (approve_row.classList.contains('row-expand')){
+        approve_row.classList.remove('row-expand');
+        approve_row.classList.add('row-collapse');
+        [].forEach.call(approve_row.getElementsByClassName("hide_your_input"), function(el) { el.classList.add("hide") });
+      }
+
+      let retract_row = document.getElementById(tableID).rows[i + 1]
+
+      if (retract_row.classList.contains('row-collapse')){
+        retract_row.classList.remove('row-collapse')
+        retract_row.classList.add('row-expand');
+        [].forEach.call(retract_row.getElementsByClassName("hide_your_input"), function(el) { el.classList.remove("hide") });
+      } else if (retract_row.classList.contains('row-expand')){
+        retract_row.classList.remove('row-expand');
+        retract_row.classList.add('row-collapse');
+        [].forEach.call(retract_row.getElementsByClassName("hide_your_input"), function(el) { el.classList.add("hide") });
+      }
+      return false;
+    }
+
+    var retract_payment = function(retract_button, date_created) {
+        reason = retract_button.parentNode.parentNode.getElementsByTagName("textarea")[0].value;
+        document.getElementById("loading_mark").classList.remove("hide");
+        const XHR = new XMLHttpRequest();
+
+        // Define what happens on successful data submission
+        XHR.addEventListener("load", (event) => {
+          get_author_details()
+          window.scrollTo(0, 0);
+        });
+
+        // Define what happens in case of error
+        XHR.addEventListener("error", (event) => {
+          alert("Oops! Something went wrong.");
+          console.log(event);
+          document.getElementById("loading_mark").classList.add("hide");
+        });
+
+        // Set up our request
+        XHR.open("POST", "/api/admin/payment/retract");
+
+        // The data sent is what the user provided in the form
+        data = {"username": getQueryVariable("author"),
+                "date_created": date_created,
+                "reason": reason
+                }
+        XHR.send(JSON.stringify(data));
+    };
 </script>
 </head>
 <body onload="get_author_details()">
@@ -138,18 +227,28 @@
 <main class="container" id="main_container" style="padding-top: 20px;">
 
     <div id="loading_mark" aria-busy="true"></div>
-    <h1>Invite <span id="contributor_title"></span></h1>
+    <h1>Details of contributor: <span id="contributor_title"></span></h1>
 
-    <div style="margin-bottom: 2em;">
-        <h3>Recent PRs</h3>
-        <div id="recent_prs">
-
+    <div class="tabs">
+        <input type="radio" name="tabs" id="tab_recent_prs" checked="checked">
+        <label for="tab_recent_prs">Recent PRs</label>
+        <div class="tab">
+            <div id="recent_prs" style="margin-bottom: 2em;">
+            </div>
         </div>
-    </div>
-    <div style="margin-bottom: 2em;">
-        <h3>Outstanding Payments</h3>
-        <div id="outstanding_payments">
-        ...
+
+        <input type="radio" name="tabs" id="tab_outstanding_payments">
+        <label for="tab_outstanding_payments">Outstanding Payments</label>
+        <div class="tab">
+            <div id="outstanding_payments" style="margin-bottom: 2em;">
+            </div>
+        </div>
+
+        <input type="radio" name="tabs" id="tab_processed_payments">
+        <label for="tab_processed_payments">Processed Payments</label>
+        <div class="tab">
+            <div id="processed_payments" style="margin-bottom: 2em;">
+            </div>
         </div>
     </div>
 
