@@ -10,7 +10,7 @@ variable "repo_owner_name" {
 
 resource "null_resource" "install_jwt_dependencies" {
   provisioner "local-exec" {
-    command = "pip install --platform manylinux2010_x86_64 --implementation cp --python 3.10 --only-binary=:all: --upgrade --target ${var.lambda_root}/jwt_dependencies/python jwt cryptography"
+    command = "pip install --platform manylinux2010_x86_64 --implementation cp --only-binary=:all: --upgrade --target ${var.lambda_root}/jwt_dependencies/python jwt cryptography"
   }
 
   triggers = {
