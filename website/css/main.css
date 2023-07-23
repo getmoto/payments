@@ -87,3 +87,15 @@ div[aria-busy="true"]::before {
     display: block;
     margin: 0 auto;
 }
+
+.row-collapse td {
+  padding: 0px 0px;
+  line-height: 0px;
+  white-space: nowrap;
+  overflow: hidden;
+  transition-duration: .75s;
+}
+.row-expand td {
+  line-height: 100%;
+  transition-duration: .75s;
+}

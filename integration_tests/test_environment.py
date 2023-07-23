@@ -4,11 +4,12 @@ import boto3
 def test_dynamodb():
     ddb = boto3.client("dynamodb", "us-east-1", endpoint_url="http://localhost:5000")
     table_names = ddb.list_tables()["TableNames"]
-    assert len(table_names) == 5
+    assert len(table_names) == 6
     assert "PullRequests" in table_names
     assert "UserSettings" in table_names
     assert "OAuthState" in table_names
     assert "Payments" in table_names
+    assert "PaymentsRetracted" in table_names
     assert "ScriptExecutionInfo" in table_names
 
 

@@ -81,7 +81,8 @@ data "aws_iam_policy_document" "lambda_service_access" {
       "dynamodb:UpdateItem",
       "dynamodb:PutItem",
       "dynamodb:BatchWriteItem",
-      "dynamodb:Query"
+      "dynamodb:Query",
+      "dynamodb:DeleteItem"
     ]
 
     resources = ["arn:aws:dynamodb:*:*:*"]
