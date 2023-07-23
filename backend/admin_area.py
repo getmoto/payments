@@ -3,6 +3,7 @@ import json
 import os
 from boto3.dynamodb.conditions import Key
 from datetime import datetime
+from time import time
 from query_opencollective import QueryOpenCollective
 from query_github import QueryGithub
 from github_bot import GithubBot
@@ -10,8 +11,10 @@ from typing import Dict, List
 
 
 region = os.getenv("REGION")
+dynamodb_client = boto3.client("dynamodb", region)
 dynamodb = boto3.resource("dynamodb", region)
 payment_table = dynamodb.Table("Payments")
+retracted_payment_table = dynamodb.Table("PaymentsRetracted")
 pr_table = dynamodb.Table("PullRequests")
 user_table = dynamodb.Table("UserSettings")
 
@@ -44,15 +47,69 @@ def lambda_handler(event, context):
         contributor = event["rawQueryString"].split("=")[-1]
         return get_contributor_info(contributor)
 
-    if path == "/api/admin/invite" and method == "POST":
+    if path == "/api/admin/payment" and method == "POST":
         # Store details in DB
         details = json.loads(event["body"])
-        details["updatedBy"] = username
+        try:
+            # FE uses an integer-input, so we should be alright - this just adds additional validation
+            amount = details["amount"]
+            if amount.startswith("$"):
+                float(amount[1:])
+            else:
+                float(amount)
+                amount = f"${amount}"
+            details["amount"] = amount
+        except:
+            return {"statusCode": 400,
+                    "headers": {'Content-Type': 'application/json'},
+                    "body": json.dumps({"msg": "Please provide a valid amount (Optionally prefixed with a $)"})}
+        details["createdBy"] = username
         details["date_created"] = datetime.now().strftime("%Y%m%d%H%M%S")
         payment_table.put_item(Item=details)
         # Notify user
         if details.get("pr_notification"):
             GithubBot.notify_user(pr_number=details["pr_notification"], notification_text=details["pr_text"])
+        return {}
+
+    if path == "/api/admin/payment/retract" and method == "POST":
+        details = json.loads(event["body"])
+        item_key = {
+            "username": {"S": details["username"]},
+            "date_created": {"S": details["date_created"]}
+        }
+        item_details = dynamodb_client.get_item(TableName="Payments", Key=item_key)["Item"]
+        item_details["updated_by"] = {"S": username}
+        item_details["date_updated"] = {"S": datetime.now().strftime("%Y%m%d%H%M%S")}
+        item_details["reason"] = {"S": details["reason"]}
+        dynamodb_client.transact_write_items(
+            TransactItems=[
+                {"Delete": {
+                    "Key": item_key,
+                    "TableName": "Payments"
+                }},
+                {"Put": {
+                    "Item": item_details,
+                    "TableName": "PaymentsRetracted"
+                }}
+            ]
+        )
+        return {}
+
+    if path == "/api/admin/payment/approve" and method == "POST":
+        details = json.loads(event["body"])
+        item_key = {
+            "username": {"S": details["username"]},
+            "date_created": {"S": details["date_created"]}
+        }
+        dynamodb_client.update_item(
+            TableName=payment_table.name,
+            Key=item_key,
+            UpdateExpression="set #processed=:processed",
+            ExpressionAttributeNames={"#processed": "processed"},
+            ExpressionAttributeValues={":processed": {"M": {"approved_on": {"S": str(int(time()))},
+                                                            "order": {"S": details["order"]},
+                                                            "approved_by": {"S": username}}}},
+        )
         return {}
 
     return {"message": "Unknown"}
@@ -90,6 +147,8 @@ def get_contributor_info(contributor):
     global github_token
     if github_token is None:
         github_token = ssm.get_parameter(Name="/moto/payments/tokens/github", WithDecryption=True)["Parameter"]["Value"]
+    # TODO: only retrieve necessary fields
+    # We don't need the `pr_text`, for instance
     payments = payment_table.query(
         ScanIndexForward=False,
         KeyConditionExpression=Key("username").eq(contributor)

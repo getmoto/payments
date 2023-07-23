@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Moto Payments - Contributor Details</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <script>
+    function get_author_details() {
+        document.getElementById("contributor_title").innerHTML = getQueryVariable("author");
+        document.getElementById("contributor_warning").innerHTML = getQueryVariable("author");
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "/api/admin/contributor?author=" + getQueryVariable("author"));
+        xhr.send();
+        xhr.responseType = "json";
+
+        xhr.onload = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                document.getElementById("loading_mark").classList.add("hide")
+                pr_links = ""
+                for (let i = 0; i < xhr.response["prs"].length; i++) {
+                  var pr = xhr.response["prs"][i];
+                  pr_links += `<tr><td><a target="_blank" href="https://github.com/getmoto/moto/pull/${ pr["number"] }">${ pr["number"] } - ${ pr["title"] }</a></td><td><a onclick="prefill('${ pr["number"] }')">Prefill form with these details</a></td></tr>`;
+                }
+                if (xhr.response["prs"].length == 0) {
+                  document.getElementById("recent_prs").innerHTML = "No recent PR's.";
+                } else {
+                  document.getElementById("recent_prs").innerHTML = "<table>" + pr_links + "</table>";
+                }
+
+                outstanding_payments_text = "";
+                processed_payments_text = "";
+                for (let j=0; j< xhr.response["payments"].length; j++) {
+                  payment = xhr.response["payments"][j];
+                  if ("processed" in payment) {
+                      processed_payments_text += `<a href="${payment["processed"]["order"]}">${ payment["title"] }</a> - ${payment["amount"]} (${payment["details"]})<br />`;
+                  } else {
+                      // Details of payment
+                      outstanding_payments_text += `<tr>`;
+                      outstanding_payments_text += `<td>${ payment["title"] }</td><td>${ payment["amount"] }</td><td>${ payment["details"] }</td>`;
+                      outstanding_payments_text += `<td><a href="#" onclick="return row_expand_collapse(this)" role="button" class="outline">Options</a></td>`;
+                      outstanding_payments_text += "</tr>"
+                      // Option to Approve
+                      outstanding_payments_text += `<tr class="row-collapse">`;
+                      outstanding_payments_text += `<td colspan="3" style="border-bottom: none"><textarea class="hide_your_input hide" placeholder="Link to proof of payment, e.g. https://opencollective.com/moto/expenses/..."></textarea></td>`;
+                      outstanding_payments_text += `<td style="border-bottom: none"><a class="hide_your_input hide outline" href="#" onclick="approve_payment(this, '${ payment["date_created"] }'); return false" role="button" class="outline">Approved</a></td>`;
+                      outstanding_payments_text += `</tr>`;
+                      // Option to Retract
+                      outstanding_payments_text += `<tr class="row-collapse">`;
+                      outstanding_payments_text += `<td colspan="3" style="border-bottom: none"><textarea class="hide_your_input hide" placeholder="Payment offer retracted because... (Note that the user will not see retracted offers, but we do keep a record.)"></textarea></td>`;
+                      outstanding_payments_text += `<td style="border-bottom: none"><a class="hide_your_input hide outline" href="#" onclick="retract_payment(this, '${ payment["date_created"] }'); return false" role="button" style="color: red">Retract</a></td>`;
+                      outstanding_payments_text += `</tr>`;
+                  }
+                }
+                if (outstanding_payments_text == "") {
+                  outstanding_payments_text = "No recent payments.";
+                } else {
+                  outstanding_payments_text = `<table id="outstanding_payments_table"> ${outstanding_payments_text }</table>`;
+                }
+                if (processed_payments_text == "") {
+                  processed_payments_text = "No recent payments.";
+                }
+
+                document.getElementById("outstanding_payments").innerHTML = outstanding_payments_text;
+                document.getElementById("processed_payments").innerHTML = processed_payments_text;
+            } else {
+              window.location.href = 'index.html'
+            }
+        };
+    }
+
+    function getQueryVariable(variable) {
+      var query = window.location.search.substring(1);
+      var vars = query.split("&");
+      for (var i=0;i<vars.length;i++) {
+        var pair = vars[i].split("=");
+        if (pair[0] == variable) {
+          return pair[1];
+        }
+      }
+    }
+
+    pr_text = `Hi @${getQueryVariable("author")},\n\nThank you for contributing to Moto!\n\nTo show our thanks, we'd like to share some of the donations that we've received with you. PR's like this are the big reason that Moto is as successful as it is - so it's only fair that you, as a contributor, gets to share the spoils.\n\nWe've created a companion website with more information:\nhttps://payments.getmoto.org/\n\nFeel free to open a bug or discussion if you run into any problems:\nhttps://github.com/getmoto/payments`;
+
+    window.addEventListener("load", () => {
+      function sendData() {
+        document.getElementById("loading_mark").classList.remove("hide");
+        document.getElementById("submitbutton").setAttribute("aria-busy", "true");
+        const XHR = new XMLHttpRequest();
+
+        // Define what happens on successful data submission
+        XHR.addEventListener("load", (event) => {
+          get_author_details()
+          // Clear form
+          document.getElementById("details").value = "Development of ...";
+          document.getElementById("amount").value = "";
+          document.getElementById("pr_notification").value = "";
+          document.getElementById("submitbutton").removeAttribute("aria-busy");
+          // Scroll to the top, so the user can see the latest updates
+          window.scrollTo(0, 0);
+        });
+
+        // Define what happens in case of error
+        XHR.addEventListener("error", (event) => {
+          alert("Oops! Something went wrong.");
+        });
+
+        // Set up our request
+        XHR.open("POST", "/api/admin/payment");
+
+        // The data sent is what the user provided in the form
+        data = {"username": getQueryVariable("author"),
+                "amount": document.getElementById("amount").value,
+                "title": document.getElementById("title").value,
+                "details": document.getElementById("details").value,
+                "pr_notification": document.getElementById("pr_notification").value,
+                "pr_text": document.getElementById("pr_text").value
+                }
+        XHR.send(JSON.stringify(data));
+      }
+
+      // Get the form element
+      const form = document.getElementById("inviteForm");
+
+      // Add 'submit' event handler
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        sendData();
+      });
+
+      // Pre-fill the data in our form
+      document.getElementById("pr_text").value = pr_text;
+    });
+
+    function prefill(nr) {
+      document.getElementById("details").value = "Development of https://github.com/getmoto/moto/pull/" + nr;
+      document.getElementById("pr_notification").value = nr
+    }
+
+    function row_expand_collapse(e){
+
+      //get table id so you know what table to manipulate row from
+      const tableID = e.parentNode.parentNode.parentNode.parentNode.id;
+
+      //get row index and increment by 1 so you know what row to expand/collapse
+      const i = e.parentNode.parentNode.rowIndex + 1;
+
+      let approve_row = document.getElementById(tableID).rows[i]
+
+      if (approve_row.classList.contains('row-collapse')){
+        approve_row.classList.remove('row-collapse');
+        approve_row.classList.add('row-expand');
+        [].forEach.call(approve_row.getElementsByClassName("hide_your_input"), function(el) { el.classList.remove("hide") });
+      } else if (approve_row.classList.contains('row-expand')){
+        approve_row.classList.remove('row-expand');
+        approve_row.classList.add('row-collapse');
+        [].forEach.call(approve_row.getElementsByClassName("hide_your_input"), function(el) { el.classList.add("hide") });
+      }
+
+      let retract_row = document.getElementById(tableID).rows[i + 1]
+
+      if (retract_row.classList.contains('row-collapse')){
+        retract_row.classList.remove('row-collapse')
+        retract_row.classList.add('row-expand');
+        [].forEach.call(retract_row.getElementsByClassName("hide_your_input"), function(el) { el.classList.remove("hide") });
+      } else if (retract_row.classList.contains('row-expand')){
+        retract_row.classList.remove('row-expand');
+        retract_row.classList.add('row-collapse');
+        [].forEach.call(retract_row.getElementsByClassName("hide_your_input"), function(el) { el.classList.add("hide") });
+      }
+      return false;
+    }
+
+    var approve_payment = function(approve_button, date_created) {
+        order = approve_button.parentNode.parentNode.getElementsByTagName("textarea")[0].value;
+        document.getElementById("loading_mark").classList.remove("hide");
+        const XHR = new XMLHttpRequest();
+
+        // Define what happens on successful data submission
+        XHR.addEventListener("load", (event) => {
+          get_author_details()
+          window.scrollTo(0, 0);
+        });
+
+        // Define what happens in case of error
+        XHR.addEventListener("error", (event) => {
+          alert("Oops! Something went wrong.");
+          console.log(event);
+          document.getElementById("loading_mark").classList.add("hide");
+        });
+
+        // Set up our request
+        XHR.open("POST", "/api/admin/payment/approve");
+
+        // The data sent is what the user provided in the form
+        data = {"username": getQueryVariable("author"),
+                "date_created": date_created,
+                "order": order
+                }
+        XHR.send(JSON.stringify(data));
+    };
+
+    var retract_payment = function(retract_button, date_created) {
+        reason = retract_button.parentNode.parentNode.getElementsByTagName("textarea")[0].value;
+        document.getElementById("loading_mark").classList.remove("hide");
+        const XHR = new XMLHttpRequest();
+
+        // Define what happens on successful data submission
+        XHR.addEventListener("load", (event) => {
+          get_author_details()
+          window.scrollTo(0, 0);
+        });
+
+        // Define what happens in case of error
+        XHR.addEventListener("error", (event) => {
+          alert("Oops! Something went wrong.");
+          console.log(event);
+          document.getElementById("loading_mark").classList.add("hide");
+        });
+
+        // Set up our request
+        XHR.open("POST", "/api/admin/payment/retract");
+
+        // The data sent is what the user provided in the form
+        data = {"username": getQueryVariable("author"),
+                "date_created": date_created,
+                "reason": reason
+                }
+        XHR.send(JSON.stringify(data));
+    };
+</script>
+</head>
+<body onload="get_author_details()">
+
+<div style="overflow: hidden;height: 100px;">
+
+    <nav class="demo">
+        <ul width="100%">
+            <li class="brand">
+                <img src="images/logo_royalblue_c.png" style="width: 3em" />
+                <h1 style="display: inline">Moto Payments</h1>
+            </li>
+        </ul>
+
+        <ul>
+            <li><a href="payments.html" class="button icon-picture hide" id="payment-menu-button">Payment Info</a></li>
+            <li><a href="faq.html" class="button icon-picture" id="faq-menu-button">FAQ</a></li>
+            <li><a href="#" onclick="logout()" class="button icon-puzzle hide" id="logout-menu-button">Logout</a></li>
+        </ul>
+    </nav>
+
+</div>
+
+<main class="container" id="main_container" style="padding-top: 20px;">
+
+    <div id="loading_mark" aria-busy="true"></div>
+    <h1>Details of contributor: <span id="contributor_title"></span></h1>
+
+    <div class="tabs">
+        <input type="radio" name="tabs" id="tab_recent_prs" checked="checked">
+        <label for="tab_recent_prs">Recent PRs</label>
+        <div class="tab">
+            <div id="recent_prs" style="margin-bottom: 2em;">
+            </div>
+        </div>
+
+        <input type="radio" name="tabs" id="tab_outstanding_payments">
+        <label for="tab_outstanding_payments">Outstanding Payments</label>
+        <div class="tab">
+            <div id="outstanding_payments" style="margin-bottom: 2em;">
+            </div>
+        </div>
+
+        <input type="radio" name="tabs" id="tab_processed_payments">
+        <label for="tab_processed_payments">Processed Payments</label>
+        <div class="tab">
+            <div id="processed_payments" style="margin-bottom: 2em;">
+            </div>
+        </div>
+    </div>
+
+    <h2>New Payment</h2>
+    <form id="inviteForm">
+        <label for="amount">
+            Amount: <input id="amount" type="number" required>
+        </label>
+
+        <label for="title">
+            Title: <input id="title" type="text" value="Development Moto" required>
+        </label>
+
+        <label for="details">
+
+            Details: <input id="details" type="text" value="Development of ..." required>
+            <span style="color: red; font-style: italic;">
+                Make sure to include a link to the work that was done! This is required for OpenCollective to accept the expense.
+            </span>
+        </label>
+
+        <label for="pr_notification">
+            Notify user in PR: <input id="pr_notification" type="text" placeholder="0000">
+            <span style="color: red; font-style: italic;">
+                Make sure this is the correct PR number! Otherwise <span id="contributor_warning"></span> may never know about this payment.
+            </span>
+        </label>
+
+        <label for="pr_text">
+            Notification text: <textarea id="pr_text" type="text" value="" style="height: 10em" required></textarea>
+        </label>
+
+        <button id="submitbutton" type="submit" style="margin-top: 2em">Submit</button>
+    </form>
+
+
+</main>
+
+</body>
+</html>

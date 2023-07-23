@@ -95,6 +95,29 @@ resource "aws_dynamodb_table" "payment-info" {
   }
 }
 
+resource "aws_dynamodb_table" "payment-info-retracted" {
+  name           = "PaymentsRetracted"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "username"
+  range_key      = "date_created"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "username"
+    type = "S"
+  }
+
+  attribute {
+    name = "date_created"
+    type = "S"
+  }
+
+  tags = {
+    Project        = "payments"
+  }
+}
+
 resource "aws_dynamodb_table" "script-execution-info" {
   name         = "ScriptExecutionInfo"
   billing_mode = "PAY_PER_REQUEST"

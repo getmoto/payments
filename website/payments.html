@@ -45,7 +45,8 @@
                   } else {
                       payments.forEach((x) => {
                         if ("processed" in x) {
-                          document.getElementById("processed_payment_rows").innerHTML += "<tr><td scope='row'>" + x['amount'] + "</td><td scope='row'><a href='" + x['processed']['order'] + "'>" + x['title'] + "</a></td><td scope='row'>" + x['details'] + "</td><td scope='row'>" + x['processed']['approved_on'] + "</td></tr>";
+                          d = new Date(x['processed']['approved_on'] * 1000)
+                          document.getElementById("processed_payment_rows").innerHTML += "<tr><td scope='row'>" + x['amount'] + "</td><td scope='row'><a href='" + x['processed']['order'] + "'>" + x['title'] + "</a></td><td scope='row'>" + x['details'] + "</td><td scope='row'>" + d.toLocaleDateString() + "</td></tr>";
                           document.getElementById("processed_payments").classList.remove("hide");
                         } else {
                           document.getElementById("payment_rows").innerHTML += "<tr><td scope='row'>" + x['amount'] + "</td><td scope='row'><pre>" + x['title'] + "</pre></td><td scope='row'>" + x['details'] + "</td></tr>";

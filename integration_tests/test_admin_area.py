@@ -3,9 +3,10 @@ import copy
 import boto3
 import json
 from backend import admin_area, github_bot
+from string import Template
 from unittest.mock import patch, Mock
 from .lambda_events import admin_get_finance, admin_get_contributors, admin_get_contributor
-from .lambda_events import admin_invite
+from .lambda_events import admin_invite, admin_retract, admin_approve
 
 
 OPEN_COLLECTIVE_RESPONSE = {
@@ -90,7 +91,9 @@ class TestAdminArea:
         )
 
         admin_area.dynamodb = ddb_resource
+        admin_area.dynamodb_client = self.ddb
         admin_area.payment_table = ddb_resource.Table(admin_area.payment_table.name)
+        admin_area.retracted_payment_table = ddb_resource.Table(admin_area.retracted_payment_table.name)
         admin_area.user_table = ddb_resource.Table(admin_area.user_table.name)
         admin_area.ssm = ssm
         github_bot.GithubBot.ssm = ssm
@@ -99,6 +102,9 @@ class TestAdminArea:
         for item in admin_area.payment_table.scan()["Items"]:
             key = {"username": item["username"], "date_created": item["date_created"]}
             admin_area.payment_table.delete_item(Key=key)
+        for item in admin_area.retracted_payment_table.scan()["Items"]:
+            key = {"username": item["username"], "date_created": item["date_created"]}
+            admin_area.retracted_payment_table.delete_item(Key=key)
 
     def test_get_finance_data__no_prs(self):
         with patch("query_opencollective.http.request", return_value=Mock()) as mock_http:
@@ -178,7 +184,7 @@ class TestAdminArea:
                                       'updatedAt': '2023-07-04T16:59:28Z'}],
                             "payments": []}
 
-    def test_invite(self):
+    def test_create_payment(self):
         with patch("github_bot.GithubBot.notify_user", return_value=Mock()) as github_notifier:
             resp = admin_area.lambda_handler(admin_invite, context=None)
             _, kwargs = github_notifier.call_args
@@ -188,10 +194,10 @@ class TestAdminArea:
         database_items = admin_area.payment_table.scan()["Items"]
         assert len(database_items) == 1
         assert database_items[0]["username"] == "user_name"
-        assert database_items[0]["amount"] == "22"
+        assert database_items[0]["amount"] == "$22"
         assert database_items[0]["title"] == "Development Moto"
         assert database_items[0]["details"] == "Development of ..."
-        assert database_items[0]["updatedBy"] == "bblommers"
+        assert database_items[0]["createdBy"] == "bblommers"
         assert "date_created" in database_items[0]
 
         with patch("query_github.QueryGithub._execute", return_value=Mock()) as mock_gh:
@@ -199,9 +205,47 @@ class TestAdminArea:
 
             resp = admin_area.lambda_handler(admin_get_contributor, context=None)
             assert len(resp["payments"]) == 1
-            assert resp["payments"][0]["amount"] == "22"
+            assert resp["payments"][0]["amount"] == "$22"  # DollarSign is added automatically
             assert resp["payments"][0]["details"] == "Development of ..."
             assert resp["payments"][0]["title"] == "Development Moto"
+
+    def test_create_payment_with_dollar_added(self):
+        event = copy.deepcopy(admin_invite)
+        event_body = json.loads(event["body"])
+        event_body["amount"] = f"${event_body['amount']}"
+        event["body"] = json.dumps(event_body)
+        with patch("github_bot.GithubBot.notify_user", return_value=Mock()):
+            admin_area.lambda_handler(event, context=None)
+
+        database_items = admin_area.payment_table.scan()["Items"]
+        assert len(database_items) == 1
+        assert database_items[0]["amount"] == "$22"
+
+    def test_create_payment_with_invalid_amount(self):
+        event = copy.deepcopy(admin_invite)
+        event_body = json.loads(event["body"])
+        event_body["amount"] = "sth non floaty"
+        event["body"] = json.dumps(event_body)
+        with patch("github_bot.GithubBot.notify_user", return_value=Mock()):
+            resp = admin_area.lambda_handler(event, context=None)
+            assert resp["statusCode"] == 400
+            assert "Please provide a valid amount" in json.loads(resp["body"])["msg"]
+
+        database_items = admin_area.payment_table.scan()["Items"]
+        assert len(database_items) == 0
+
+    def test_create_payment_with_invalid_amount__but_prefixed_with_dollar(self):
+        event = copy.deepcopy(admin_invite)
+        event_body = json.loads(event["body"])
+        event_body["amount"] = "$non floaty"
+        event["body"] = json.dumps(event_body)
+        with patch("github_bot.GithubBot.notify_user", return_value=Mock()):
+            resp = admin_area.lambda_handler(event, context=None)
+            assert resp["statusCode"] == 400
+            assert "Please provide a valid amount" in json.loads(resp["body"])["msg"]
+
+        database_items = admin_area.payment_table.scan()["Items"]
+        assert len(database_items) == 0
 
     def test_invite_without_notification(self):
         event = copy.deepcopy(admin_invite)
@@ -213,6 +257,56 @@ class TestAdminArea:
 
         database_items = admin_area.payment_table.scan()["Items"]
         assert len(database_items) == 1
+
+    def test_retract_payment(self):
+        # Create new payment
+        with patch("github_bot.GithubBot.notify_user", return_value=Mock()):
+            resp = admin_area.lambda_handler(admin_invite, context=None)
+        # Get DateCreated
+        with patch("query_github.QueryGithub._execute", return_value=Mock()) as mock_gh:
+            mock_gh.return_value = GITHUB_CONTRIBUTOR_RESPONSE
+
+            date_created = admin_area.lambda_handler(admin_get_contributor, context=None)["payments"][0]["date_created"]
+
+        # Retract Payment
+        event = copy.deepcopy(admin_retract)
+        event = json.loads(Template(json.dumps(event)).substitute(DATE_CREATED=date_created))
+        admin_area.lambda_handler(event, context=None)
+
+        # User has no payments left
+        with patch("query_github.QueryGithub._execute", return_value=Mock()) as mock_gh:
+            mock_gh.return_value = GITHUB_CONTRIBUTOR_RESPONSE
+
+            payments = admin_area.lambda_handler(admin_get_contributor, context=None)["payments"]
+            assert payments == []
+
+        # Table has one item
+        items = self.ddb.scan(TableName="PaymentsRetracted")["Items"]
+        assert len(items) == 1
+        assert items[0]["title"] == {"S": "Development Moto"}
+        assert items[0]["amount"] == {"S": "$22"}
+        assert items[0]["updated_by"] == {"S": "bblommers"}
+        assert items[0]["reason"] == {"S": "asdf"}
+
+    def test_approve_payment(self):
+        # Create new payment
+        with patch("github_bot.GithubBot.notify_user", return_value=Mock()):
+            resp = admin_area.lambda_handler(admin_invite, context=None)
+        # Get DateCreated
+        with patch("query_github.QueryGithub._execute", return_value=Mock()) as mock_gh:
+            mock_gh.return_value = GITHUB_CONTRIBUTOR_RESPONSE
+
+            date_created = admin_area.lambda_handler(admin_get_contributor, context=None)["payments"][0]["date_created"]
+
+        # Approve Payment
+        event = copy.deepcopy(admin_approve)
+        event = json.loads(Template(json.dumps(event)).substitute(DATE_CREATED=date_created))
+        admin_area.lambda_handler(event, context=None)
+
+        db_item = self.ddb.scan(TableName="Payments")["Items"][0]
+        print(db_item)
+        assert "order" in db_item["processed"]
+        assert "approved_by" in db_item["processed"]
 
     def test_unknown_caller(self):
         resp = admin_area.lambda_handler(event={}, context=None)
