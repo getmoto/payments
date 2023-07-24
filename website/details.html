@@ -18,6 +18,13 @@
         xhr.onload = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 document.getElementById("loading_mark").classList.add("hide")
+
+                if (xhr.response["oc_name"]) {
+                    document.getElementById("oc_name").innerHTML = xhr.response["oc_name"];
+                } else {
+                    document.getElementById("oc_name").innerHTML = "Not set."
+                }
+
                 pr_links = ""
                 for (let i = 0; i < xhr.response["prs"].length; i++) {
                   var pr = xhr.response["prs"][i];
@@ -256,7 +263,8 @@
 <main class="container" id="main_container" style="padding-top: 20px;">
 
     <div id="loading_mark" aria-busy="true"></div>
-    <h1>Details of contributor: <span id="contributor_title"></span></h1>
+    <h1>Contributor: <span id="contributor_title"></span></h1>
+    <h4>OpenCollective username: <span id="oc_name"></span></h4>
 
     <div class="tabs">
         <input type="radio" name="tabs" id="tab_recent_prs" checked="checked">
