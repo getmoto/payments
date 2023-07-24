@@ -121,7 +121,7 @@ def lambda_handler(event, context):
             return {"isAuthorized": False}
 
     get_paths = ["/api/admin/finance", "/api/admin/contributors", "/api/admin/contributor"]
-    post_paths = ["/api/admin/payment", "/api/admin/payment/retract"]
+    post_paths = ["/api/admin/payment", "/api/admin/payment/retract", "/api/admin/payment/approve"]
     if (path in get_paths and method == "GET") or (path in post_paths and method == "POST"):
         # ADMIN AUTHORIZER
         try:

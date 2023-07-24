@@ -44,11 +44,11 @@
                       // Option to Approve
                       outstanding_payments_text += `<tr class="row-collapse">`;
                       outstanding_payments_text += `<td colspan="3" style="border-bottom: none"><textarea class="hide_your_input hide" placeholder="Link to proof of payment, e.g. https://opencollective.com/moto/expenses/..."></textarea></td>`;
-                      outstanding_payments_text += `<td style="border-bottom: none"><a class="hide_your_input hide outline" href="#" onclick="console.log('call api'); return false" role="button" class="outline">Approved</a></td>`;
+                      outstanding_payments_text += `<td style="border-bottom: none"><a class="hide_your_input hide outline" href="#" onclick="approve_payment(this, '${ payment["date_created"] }'); return false" role="button" class="outline">Approved</a></td>`;
                       outstanding_payments_text += `</tr>`;
                       // Option to Retract
                       outstanding_payments_text += `<tr class="row-collapse">`;
-                      outstanding_payments_text += `<td colspan="3" style="border-bottom: none"><textarea class="hide_your_input hide" placeholder="Payment offer retracted because... (Note that the user will not see retracted offers, but we do keep a record of them."></textarea></td>`;
+                      outstanding_payments_text += `<td colspan="3" style="border-bottom: none"><textarea class="hide_your_input hide" placeholder="Payment offer retracted because... (Note that the user will not see retracted offers, but we do keep a record.)"></textarea></td>`;
                       outstanding_payments_text += `<td style="border-bottom: none"><a class="hide_your_input hide outline" href="#" onclick="retract_payment(this, '${ payment["date_created"] }'); return false" role="button" style="color: red">Retract</a></td>`;
                       outstanding_payments_text += `</tr>`;
                   }
@@ -172,6 +172,35 @@
       }
       return false;
     }
+
+    var approve_payment = function(approve_button, date_created) {
+        order = approve_button.parentNode.parentNode.getElementsByTagName("textarea")[0].value;
+        document.getElementById("loading_mark").classList.remove("hide");
+        const XHR = new XMLHttpRequest();
+
+        // Define what happens on successful data submission
+        XHR.addEventListener("load", (event) => {
+          get_author_details()
+          window.scrollTo(0, 0);
+        });
+
+        // Define what happens in case of error
+        XHR.addEventListener("error", (event) => {
+          alert("Oops! Something went wrong.");
+          console.log(event);
+          document.getElementById("loading_mark").classList.add("hide");
+        });
+
+        // Set up our request
+        XHR.open("POST", "/api/admin/payment/approve");
+
+        // The data sent is what the user provided in the form
+        data = {"username": getQueryVariable("author"),
+                "date_created": date_created,
+                "order": order
+                }
+        XHR.send(JSON.stringify(data));
+    };
 
     var retract_payment = function(retract_button, date_created) {
         reason = retract_button.parentNode.parentNode.getElementsByTagName("textarea")[0].value;

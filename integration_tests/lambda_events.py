@@ -53,6 +53,17 @@ admin_invite = {
     "body": '{"username":"user_name","amount":"22","title":"Development Moto","details":"Development of ...", "pr_notification": "1", "pr_text": "some text"}',
 }
 
+admin_approve = {
+    "requestContext": {
+        "authorizer": {"lambda": {"username": "bblommers"}},
+        "http": {
+            "method": "POST",
+            "path": "/api/admin/payment/approve",
+        },
+    },
+    "body": '{"username":"user_name","date_created":"$DATE_CREATED","order":"some link to opencollective"}',
+}
+
 admin_retract = {
     "requestContext": {
         "authorizer": {"lambda": {"username": "bblommers"}},

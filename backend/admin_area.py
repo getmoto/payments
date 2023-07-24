@@ -3,6 +3,7 @@ import json
 import os
 from boto3.dynamodb.conditions import Key
 from datetime import datetime
+from time import time
 from query_opencollective import QueryOpenCollective
 from query_github import QueryGithub
 from github_bot import GithubBot
@@ -50,6 +51,7 @@ def lambda_handler(event, context):
         # Store details in DB
         details = json.loads(event["body"])
         try:
+            # FE uses an integer-input, so we should be alright - this just adds additional validation
             amount = details["amount"]
             if amount.startswith("$"):
                 float(amount[1:])
@@ -76,7 +78,7 @@ def lambda_handler(event, context):
             "date_created": {"S": details["date_created"]}
         }
         item_details = dynamodb_client.get_item(TableName="Payments", Key=item_key)["Item"]
-        item_details["updatedBy"] = {"S": username}
+        item_details["updated_by"] = {"S": username}
         item_details["date_updated"] = {"S": datetime.now().strftime("%Y%m%d%H%M%S")}
         item_details["reason"] = {"S": details["reason"]}
         dynamodb_client.transact_write_items(
@@ -90,6 +92,23 @@ def lambda_handler(event, context):
                     "TableName": "PaymentsRetracted"
                 }}
             ]
+        )
+        return {}
+
+    if path == "/api/admin/payment/approve" and method == "POST":
+        details = json.loads(event["body"])
+        item_key = {
+            "username": {"S": details["username"]},
+            "date_created": {"S": details["date_created"]}
+        }
+        dynamodb_client.update_item(
+            TableName=payment_table.name,
+            Key=item_key,
+            UpdateExpression="set #processed=:processed",
+            ExpressionAttributeNames={"#processed": "processed"},
+            ExpressionAttributeValues={":processed": {"M": {"approved_on": {"S": str(int(time()))},
+                                                            "order": {"S": details["order"]},
+                                                            "approved_by": {"S": username}}}},
         )
         return {}
 

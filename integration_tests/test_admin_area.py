@@ -6,7 +6,7 @@ from backend import admin_area, github_bot
 from string import Template
 from unittest.mock import patch, Mock
 from .lambda_events import admin_get_finance, admin_get_contributors, admin_get_contributor
-from .lambda_events import admin_invite, admin_retract
+from .lambda_events import admin_invite, admin_retract, admin_approve
 
 
 OPEN_COLLECTIVE_RESPONSE = {
@@ -285,8 +285,28 @@ class TestAdminArea:
         assert len(items) == 1
         assert items[0]["title"] == {"S": "Development Moto"}
         assert items[0]["amount"] == {"S": "$22"}
-        assert items[0]["updatedBy"] == {"S": "bblommers"}
+        assert items[0]["updated_by"] == {"S": "bblommers"}
         assert items[0]["reason"] == {"S": "asdf"}
+
+    def test_approve_payment(self):
+        # Create new payment
+        with patch("github_bot.GithubBot.notify_user", return_value=Mock()):
+            resp = admin_area.lambda_handler(admin_invite, context=None)
+        # Get DateCreated
+        with patch("query_github.QueryGithub._execute", return_value=Mock()) as mock_gh:
+            mock_gh.return_value = GITHUB_CONTRIBUTOR_RESPONSE
+
+            date_created = admin_area.lambda_handler(admin_get_contributor, context=None)["payments"][0]["date_created"]
+
+        # Approve Payment
+        event = copy.deepcopy(admin_approve)
+        event = json.loads(Template(json.dumps(event)).substitute(DATE_CREATED=date_created))
+        admin_area.lambda_handler(event, context=None)
+
+        db_item = self.ddb.scan(TableName="Payments")["Items"][0]
+        print(db_item)
+        assert "order" in db_item["processed"]
+        assert "approved_by" in db_item["processed"]
 
     def test_unknown_caller(self):
         resp = admin_area.lambda_handler(event={}, context=None)
