@@ -153,8 +153,10 @@ def get_contributor_info(contributor):
         ScanIndexForward=False,
         KeyConditionExpression=Key("username").eq(contributor)
     )["Items"]
+    user = user_table.get_item(Key={"username": contributor})
+    oc_name = user.get("Item", {}).get("oc_username")
     prs = QueryGithub.get_prs_for(github_token, contributor)
-    return {"prs": prs, "payments": payments}
+    return {"prs": prs, "payments": payments, "oc_name": oc_name}
 
 
 def get_path_method(event):
