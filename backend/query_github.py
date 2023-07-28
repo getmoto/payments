@@ -142,6 +142,16 @@ class QueryGithub:
         print(resp.__dict__)
 
     @classmethod
+    def add_label(cls, access_token: str, pr_number: str, label_name: str) -> None:
+        resp = http.request(
+            "POST",
+            f"https://api.github.com/repos/{repo_owner_name}/issues/{pr_number}/labels",
+            body=json.dumps({"labels": [label_name]}),
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+        print(resp.__dict__)
+
+    @classmethod
     def get_access_token(cls, installation_id, jwt_token) -> str:
         resp = http.request(
             "POST",

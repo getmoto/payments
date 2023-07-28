@@ -182,7 +182,8 @@ class TestAdminArea:
                                       'state': 'MERGED',
                                       'title': 'Title of PR 1',
                                       'updatedAt': '2023-07-04T16:59:28Z'}],
-                            "payments": []}
+                            "payments": [],
+                            "oc_name": None}
 
     def test_create_payment(self):
         with patch("github_bot.GithubBot.notify_user", return_value=Mock()) as github_notifier:
@@ -305,8 +306,8 @@ class TestAdminArea:
 
         db_item = self.ddb.scan(TableName="Payments")["Items"][0]
         print(db_item)
-        assert "order" in db_item["processed"]
-        assert "approved_by" in db_item["processed"]
+        assert "order" in db_item["processed"]["M"]
+        assert "approved_by" in db_item["processed"]["M"]
 
     def test_unknown_caller(self):
         resp = admin_area.lambda_handler(event={}, context=None)
