@@ -69,5 +69,9 @@ class TestAuthentication:
             assert comment_url == ("POST", "https://api.github.com/repos/owner/repo/issues/42/comments")
             assert comment_details == {'body': '{"body": "some text"}', 'headers': {'Authorization': 'Bearer some access token'}}
 
+            comment_url, comment_details = github_http.call_args_list[2]
+            assert comment_url == ("POST", "https://api.github.com/repos/owner/repo/issues/42/labels")
+            assert comment_details == {'body': '{"labels": ["payment-approved"]}', 'headers': {'Authorization': 'Bearer some access token'}}
+
     def test_get_bot_details(self):
         assert self.bot.get_bot_details() == (self.app_id, self.installation_id, self.private_key_bytes)

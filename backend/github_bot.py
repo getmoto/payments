@@ -21,6 +21,8 @@ class GithubBot:
         access_token = GithubBot.get_access_token(installation_id, jwt_token)
         # use REST api to make comment
         QueryGithub.create_comment(access_token, pr_number, notification_text)
+        # Set label
+        QueryGithub.add_label(access_token, pr_number, "payment-approved")
 
     @staticmethod
     def get_jwt_token(private_key, app_id):
