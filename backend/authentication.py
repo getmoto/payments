@@ -164,7 +164,9 @@ def lambda_handler(event, context):
                     token = cookie.split(f"{TOKEN_NAME}=")[-1]
             if not token:
                 raise Exception("no")
-            if token not in valid_access_tokens:
+            if token in valid_access_tokens:
+                username = valid_access_tokens[token]
+            else:
                 resp = http.request(
                     "GET",
                     "https://api.github.com/user",
@@ -174,7 +176,11 @@ def lambda_handler(event, context):
                 username = json.loads(resp.data.decode('utf-8'))["login"]
                 valid_access_tokens[token] = username
 
-            return {"statusCode": "200"}
+            return {
+                "statusCode": "200",
+                "headers": {'Content-Type': 'application/json'},
+                "body": json.dumps({"admin": (username in ADMIN_USERS)})
+            }
         except Exception as e:
             return {"statusCode": "403"}
 

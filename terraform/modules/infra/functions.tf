@@ -198,6 +198,7 @@ resource "random_uuid" "lambda_hash_auth" {
 data "archive_file" "lambda_auth_package" {
   excludes   = [
     "__init__.py",
+    "admin_area.py",
     "backup_payment_data.py",
     "load_pr_info.py",
     "query_github.py",
