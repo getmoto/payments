@@ -128,7 +128,9 @@ class TestAuthentication:
 
             # Verify user is logged in
             resp = authentication.lambda_handler(api_status_event, context=None)
-            assert resp == {'statusCode': '200'}
+            assert resp["statusCode"] == '200'
+            assert resp["headers"] == {'Content-Type': 'application/json'}
+            assert resp["body"] == json.dumps({"admin": False})
 
             # Verify the correct token was passed
             request_args = list(mock_http.call_args)

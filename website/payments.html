@@ -8,6 +8,24 @@
     <link rel="stylesheet" href="css/main.css">
 
     <script type="text/javascript">
+        function check_status() {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", "/api/status");
+          xhr.responseType = "json";
+          xhr.send();
+
+          xhr.onload = () => {
+              if (xhr.readyState == 4 && xhr.status == 200) {
+                get_payment_info();
+                if (xhr.response["admin"] === true) {
+                  document.getElementById("admin-menu-button").classList.remove("hide");
+                }
+              } else {
+                window.location.href = 'index.html'
+              }
+          };
+        }
+
         function get_pr_info() {
             const xhr = new XMLHttpRequest();
             xhr.open("GET", "/api/pr_info");
@@ -81,7 +99,7 @@
     </script>
 
 </head>
-<body onload="get_payment_info()">
+<body onload="check_status()">
 
 <div style="overflow: hidden;height: 100px;">
 
@@ -94,7 +112,7 @@
         </ul>
 
         <ul>
-            <li><a href="payments.html" class="button icon-picture hide" id="payment-menu-button">Payment Info</a></li>
+            <li><a href="admin.html" class="button icon-picture hide" id="admin-menu-button">Admin</a></li>
             <li><a href="faq.html" class="button icon-picture" id="faq-menu-button">FAQ</a></li>
             <li><a href="#" onclick="logout()" class="button icon-puzzle hide" id="logout-menu-button">Logout</a></li>
         </ul>

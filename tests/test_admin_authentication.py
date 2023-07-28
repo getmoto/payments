@@ -50,6 +50,12 @@ class TestAuthentication:
             resp = authentication.lambda_handler(api_admin_finance_event, context=None)
             assert resp == {"isAuthorized": True, "context": {"username": "bblommers"}}
 
+            # User can call Status endpoint
+            resp = authentication.lambda_handler(api_status_event, context=None)
+            assert resp["statusCode"] == '200'
+            assert resp["headers"] == {'Content-Type': 'application/json'}
+            assert resp["body"] == json.dumps({"admin": True})
+
         # Verify that the access token is temporarily cached
         resp = authentication.lambda_handler(api_admin_finance_event, context=None)
         assert resp == {"isAuthorized": True, "context": {"username": "bblommers"}}
@@ -80,7 +86,9 @@ class TestAuthentication:
 
             # User can call Status endpoint
             resp = authentication.lambda_handler(api_status_event, context=None)
-            assert resp == {"statusCode": "200"}
+            assert resp["statusCode"] == '200'
+            assert resp["headers"] == {'Content-Type': 'application/json'}
+            assert resp["body"] == json.dumps({"admin": False})
 
         # Verify that the access token is temporarily cached
         assert token_value in authentication.valid_access_tokens
