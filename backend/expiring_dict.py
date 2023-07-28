@@ -4,7 +4,6 @@ Taken from https://github.com/mailgun/expiringdict/blob/master/expiringdict/__in
 
 from time import time
 from threading import RLock
-import sys
 from typing import Any, Union
 
 from collections import OrderedDict
@@ -22,21 +21,7 @@ class ExpiringDict(OrderedDict):
         self.max_age = max_age_seconds
         self.lock = RLock()
 
-        if sys.version_info >= (3, 5):
-            self._safe_keys = lambda: list(self.keys())
-        else:
-            self._safe_keys = self.keys
-
-        if items is not None:
-            if self.__is_instance_of_expiring_dict(items):
-                self.__copy_expiring_dict(max_len, max_age_seconds, items)
-            elif self.__is_instance_of_dict(items):
-                self.__copy_dict(items)
-            elif self.__is_reduced_result(items):
-                self.__copy_reduced_result(items)
-
-            else:
-                raise ValueError('can not unpack items')
+        self._safe_keys = lambda: list(self.keys())
 
     def __contains__(self, key):
         """ Return True if the dict has a key, else return False. """
@@ -128,16 +113,6 @@ class ExpiringDict(OrderedDict):
                 pass
         return r
 
-    def items_with_timestamp(self):
-        """ Return a copy of the dictionary's list of (key, value, timestamp) triples. """
-        r = []
-        for key in self._safe_keys():
-            try:
-                r.append((key, OrderedDict.__getitem__(self, key)))
-            except KeyError:
-                pass
-        return r
-
     def values(self):
         """ Return a copy of the dictionary's list of values.
         See the note for dict.items(). """
@@ -148,30 +123,6 @@ class ExpiringDict(OrderedDict):
             except KeyError:
                 pass
         return r
-
-    def fromkeys(self):
-        """ Create a new dictionary with keys from seq and values set to value. """
-        raise NotImplementedError()
-
-    def iteritems(self):
-        """ Return an iterator over the dictionary's (key, value) pairs. """
-        raise NotImplementedError()
-
-    def itervalues(self):
-        """ Return an iterator over the dictionary's values. """
-        raise NotImplementedError()
-
-    def viewitems(self):
-        """ Return a new view of the dictionary's items ((key, value) pairs). """
-        raise NotImplementedError()
-
-    def viewkeys(self):
-        """ Return a new view of the dictionary's keys. """
-        raise NotImplementedError()
-
-    def viewvalues(self):
-        """ Return a new view of the dictionary's values. """
-        raise NotImplementedError()
 
     def __reduce__(self):
         reduced = self.__class__, (self.max_len, self.max_age, ('reduce_result', self.items_with_timestamp()))
