@@ -26,24 +26,6 @@
           };
         }
 
-        function get_pr_info() {
-            const xhr = new XMLHttpRequest();
-            xhr.open("GET", "/api/pr_info");
-            xhr.send();
-            xhr.responseType = "json";
-
-            xhr.onload = () => {
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                  const prs = xhr.response["prs"];
-                  document.getElementById("pr_table").classList.remove("hide");
-                  prs.forEach((x, i) => document.getElementById("pr_table_body").innerHTML += "<tr><td scope='row'>" + x['pr_nr'] + "</td><td scope='row'>" + x['title'] + "</td><td scope='row'>" + x['last_updated'] + "</td></tr>");
-                  document.getElementById("pr_table_spinner").classList.add("hide");
-                } else {
-                  console.log(`Error: ${xhr.status}`);
-                }
-            };
-        }
-
         function get_payment_info() {
             const xhr = new XMLHttpRequest();
             xhr.open("GET", "/api/payment_info");
@@ -52,7 +34,6 @@
 
             xhr.onload = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
-                  get_pr_info();
                   const payments = xhr.response["payments"];
                   if (xhr.response["oc"]) {
                       document.getElementById("oc_username").value = xhr.response["oc"]
@@ -65,14 +46,14 @@
                         if ("processed" in x) {
                           d = new Date(x['processed']['approved_on'] * 1000)
                           document.getElementById("processed_payment_rows").innerHTML += "<tr><td scope='row'>" + x['amount'] + "</td><td scope='row'><a href='" + x['processed']['order'] + "'>" + x['title'] + "</a></td><td scope='row'>" + x['details'] + "</td><td scope='row'>" + d.toLocaleDateString() + "</td></tr>";
-                          document.getElementById("processed_payments").classList.remove("hide");
                         } else {
-                          document.getElementById("payment_rows").innerHTML += "<tr><td scope='row'>" + x['amount'] + "</td><td scope='row'><pre>" + x['title'] + "</pre></td><td scope='row'>" + x['details'] + "</td></tr>";
+                          document.getElementById("payment_rows").innerHTML += "<tr><td scope='row'>" + x['amount'] + "</td><td scope='row'>" + x['title'] + "</td><td scope='row'>" + x['details'] + "</td></tr>";
                         }
                       });
                       document.getElementById("block_payments").classList.remove("hide");
                   }
                   document.getElementById("payments_wait").classList.add("hide");
+                  document.getElementById("processed_payments_spinner").classList.add("hide");
                 } else {
                   window.location.href = 'index.html'
                 }
@@ -124,7 +105,7 @@
 
     <div class="tabs">
         <input type="radio" name="tabs" id="tabone" checked="checked">
-        <label for="tabone">Payments</label>
+        <label for="tabone">Outstanding Payments</label>
         <div class="tab">
 
             <div id="payments_wait" aria-busy="true"></div>
@@ -174,9 +155,16 @@
 
             </div>
 
-            <div id="processed_payments" class="hide">
-                <hr />
-                <p>Processed Payments</p>
+        </div>
+
+        <input type="radio" name="tabs" id="tabtwo">
+        <label for="tabtwo">Processed Payments</label>
+        <div class="tab">
+
+            <div id="payment-info-container">
+
+                <div id="processed_payments_spinner" aria-busy="true"></div>
+
                 <table>
                         <thead>
                             <tr>
@@ -190,32 +178,6 @@
 
                         </tbody>
                     </table>
-            </div>
-
-        </div>
-
-        <input type="radio" name="tabs" id="tabtwo">
-        <label for="tabtwo">Pull Requests</label>
-        <div class="tab">
-
-            <div style="margin: 2em 0">All PR's you've submitted to Moto:</div>
-
-            <div id="payment-info-container">
-
-                <div id="pr_table_spinner" aria-busy="true"></div>
-
-                <table id="pr_table" role="grid" class="hide">
-                    <thead>
-                    <tr>
-                        <th scope="col">PR</th>
-                        <th scope="col">Title</th>
-                        <th scope="col">Date</th>
-                    </tr>
-                    </thead>
-                    <tbody id="pr_table_body">
-
-                    </tbody>
-                </table>
 
             </div>
         </div>
