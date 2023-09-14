@@ -30,10 +30,11 @@
                   processed_payment_details = "";
                   for (let i = 0; i < xhr.response["payments"].length; i++) {
                       payment = xhr.response["payments"][i];
+                      payment_created = payment["date_created"].slice(0, 4) + "-" + payment["date_created"].slice(4, 6) + "-" + payment["date_created"].slice(6, 8) + " " + payment["date_created"].slice(8, 10) + ":" + payment["date_created"].slice(10, 12) + ":" + payment["date_created"].slice(12)
                       if ("processed" in payment) {
-                        processed_payment_details += `<tr><th scope="row"><a href="details.html?author=${ payment["username"] }">${ payment["username"] }</a></th><th scope="row">${ payment["amount"] }</th><th scope="row">${ payment["title"] }</th><th scope="row"><a href="${ payment["processed"]["order"] }">${ payment["details"] }</a></th></tr>`;
+                        processed_payment_details += `<tr><th scope="row"><a href="details.html?author=${ payment["username"] }">${ payment["username"] }</a></th><th scope="row">${ payment["amount"] }</th><th scope="row">${ payment["title"] }</th><th scope="row"><a href="${ payment["processed"]["order"] }">${ payment["details"] }</a></th><th scope="row">${ payment_created }</th></tr>`;
                       } else {
-                        payment_details += `<tr><th scope="row"><a href="details.html?author=${ payment["username"] }">${ payment["username"] }</a></th><th scope="row">${ payment["amount"] }</th><th scope="row">${ payment["title"] }</th><th scope="row">${ payment["details"] }</th></tr>`;
+                        payment_details += `<tr><th scope="row"><a href="details.html?author=${ payment["username"] }">${ payment["username"] }</a></th><th scope="row">${ payment["amount"] }</th><th scope="row">${ payment["title"] }</th><th scope="row">${ payment["details"] }</th><th scope="row">${ payment_created }</th></tr>`;
                       }
                   }
                   document.getElementById("outstanding_payments_body").innerHTML += payment_details;
@@ -158,6 +159,7 @@
                       <th scope="col">Amount</th>
                       <th scope="col">Title</th>
                       <th scope="col">Details</th>
+                      <th scope="col">Date Created</th>
                   </tr>
                 </thead>
                 <tbody id="outstanding_payments_body">
@@ -182,6 +184,7 @@
                       <th scope="col">Amount</th>
                       <th scope="col">Title</th>
                       <th scope="col">Details</th>
+                      <th scope="col">Date Created</th>
                   </tr>
                 </thead>
                 <tbody id="processed_payments_body">
