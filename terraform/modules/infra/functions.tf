@@ -31,7 +31,7 @@ resource "aws_lambda_layer_version" "jwt_layer" {
   filename   = data.archive_file.lambda_jwt_layer.output_path
   layer_name = "jwt_dependencies_2"
 
-  compatible_runtimes = ["python3.10"]
+  compatible_runtimes = ["python3.13"]
 }
 
 data "aws_iam_policy_document" "lambda_assume_role_policy"{
@@ -147,7 +147,7 @@ resource "aws_lambda_function" "lambda_function_load_pr_info" {
   filename      = data.archive_file.lambda_load-pr_package.output_path
   source_code_hash = data.archive_file.lambda_load-pr_package.output_base64sha256
   role          = aws_iam_role.lambda_role.arn
-  runtime       = "python3.10"
+  runtime       = "python3.13"
   handler       = "load_pr_info.lambda_handler"
   timeout       = 60
   environment {
@@ -216,7 +216,7 @@ resource "aws_lambda_function" "lambda_function_auth" {
   filename      = data.archive_file.lambda_auth_package.output_path
   source_code_hash = data.archive_file.lambda_auth_package.output_base64sha256
   role          = aws_iam_role.lambda_role.arn
-  runtime       = "python3.9"
+  runtime       = "python3.13"
   handler       = "authentication.lambda_handler"
   timeout       = 5
   depends_on    = [aws_cloudwatch_log_group.lambda_auth]
@@ -262,7 +262,7 @@ resource "aws_lambda_function" "lambda_function_user_area" {
   filename      = data.archive_file.lambda_user_area_package.output_path
   source_code_hash = data.archive_file.lambda_user_area_package.output_base64sha256
   role          = aws_iam_role.lambda_role.arn
-  runtime       = "python3.10"
+  runtime       = "python3.13"
   handler       = "user_area.lambda_handler"
   timeout       = 5
   depends_on    = [aws_cloudwatch_log_group.lambda_user_area]
@@ -293,7 +293,7 @@ resource "aws_lambda_function" "payments_info_backup" {
   source_code_hash = data.archive_file.payment_info_backup_files.output_base64sha256
   handler          = "backup_payment_data.handler"
   role             = aws_iam_role.lambda_assume_role.arn
-  runtime          = "python3.8"
+  runtime          = "python3.13"
   depends_on       = [aws_cloudwatch_log_group.payments_backup]
   environment {
     variables = {
@@ -342,7 +342,7 @@ resource "aws_lambda_function" "lambda_function_admin_area" {
   filename      = data.archive_file.lambda_admin_area_package.output_path
   source_code_hash = data.archive_file.lambda_admin_area_package.output_base64sha256
   role          = aws_iam_role.lambda_role.arn
-  runtime       = "python3.10"
+  runtime       = "python3.13"
   handler       = "admin_area.lambda_handler"
   timeout       = 10
   depends_on    = [aws_cloudwatch_log_group.lambda_admin_area]
