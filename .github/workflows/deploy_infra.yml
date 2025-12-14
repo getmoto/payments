@@ -31,7 +31,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v5.1.1
       with:
         aws-region: ${{ env.ENV_REGION }}
-        role-to-assume: arn:aws:iam::193347341732:role/GithubActionsRole
+        role-to-assume: arn:aws:iam::193347341732:role/github-actions
 
     - name: Set up Python 3.10
       uses: actions/setup-python@v6
