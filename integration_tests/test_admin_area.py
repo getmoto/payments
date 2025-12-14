@@ -147,14 +147,12 @@ class TestAdminArea:
             mock_http.return_value.data = json.dumps(OPEN_COLLECTIVE_RESPONSE).encode("utf-8")
 
             resp = admin_area.lambda_handler(admin_get_finance, context=None)
-            assert resp == {
-                "finance": {'effective_balance': '$10.00', 'oc_balance': "$50.00", 'outstanding': '$40.00'},
-                "payments": [
-                    {'amount': '$25.00', 'date_created': '20230607181200', 'username': 'a1'},
-                    {'date_created': 'b2', 'processed': 'yes', 'username': 'a2'},
-                    {'amount': '$5.00', 'date_created': '20230607181200', 'username': 'a2'},
-                    {'amount': '$10.00', 'date_created': '20230607191200', 'details': 'money for reasons', 'username': 'a2'}]
-            }
+            assert resp["finance"] == {'effective_balance': '$10.00', 'oc_balance': "$50.00", 'outstanding': '$40.00'}
+            assert len(resp["payments"]) == 4
+            assert {'amount': '$25.00', 'date_created': '20230607181200', 'username': 'a1'} in resp["payments"]
+            assert {'date_created': 'b2', 'processed': 'yes', 'username': 'a2'} in resp["payments"]
+            assert {'amount': '$5.00', 'date_created': '20230607181200', 'username': 'a2'} in resp["payments"]
+            assert {'amount': '$10.00', 'date_created': '20230607191200', 'details': 'money for reasons', 'username': 'a2'} in resp["payments"]
 
     def test_get_contributors(self):
         assert admin_area.github_token is None

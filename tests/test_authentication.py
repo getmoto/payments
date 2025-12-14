@@ -3,15 +3,14 @@ import copy
 import json
 from base64 import b64decode
 
-from moto import mock_dynamodb, mock_ssm
+from moto import mock_aws
 from unittest.mock import patch, Mock
 from .api_events import api_login_event, api_pr_info_event, github_user_response
 from .api_events import api_status_event
 from .api_events import github_bad_credentials
 
 
-@mock_dynamodb
-@mock_ssm
+@mock_aws
 class TestAuthentication:
 
     @patch.dict("os.environ", {"REGION": "us-east-1"})

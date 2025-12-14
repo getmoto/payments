@@ -1,4 +1,5 @@
 moto
+jwt
 pytest
 pytest-cov
 coverage
