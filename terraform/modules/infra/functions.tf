@@ -14,7 +14,7 @@ resource "null_resource" "install_jwt_dependencies" {
   }
 
   triggers = {
-    always_run = "20230712"
+    always_run = "20251214"
   }
 }
 
