@@ -8,11 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v5
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.10"
+          python-version: "3.13"
       - name: Update pip
         run: |
           python -m pip install --upgrade pip
@@ -35,22 +35,26 @@ jobs:
 
     services:
       motoserver:
+        env:
+          # Default LambdaImage providers (lambci, mlupin) do not support Python 3.13
+          MOTO_DOCKER_LAMBDA_IMAGE: shogo82148/lambda-python:3.13
         image: ghcr.io/getmoto/motoserver:latest
         ports: 
          - 5000:5000
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v5
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.10"
+          python-version: "3.13"
       - name: Update pip
         run: |
           python -m pip install --upgrade pip
       - name: Install project dependencies
         run: |
           pip install -r backend/requirements.txt
+      - uses: hashicorp/setup-terraform@v3
       - name: Run TF
         run: |
           mkdir ~/.aws && touch ~/.aws/credentials && echo -e "[default]\naws_access_key_id = test\naws_secret_access_key = test" > ~/.aws/credentials

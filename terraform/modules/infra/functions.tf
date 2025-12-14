@@ -10,7 +10,7 @@ variable "repo_owner_name" {
 
 resource "null_resource" "install_jwt_dependencies" {
   provisioner "local-exec" {
-    command = "pip install --platform manylinux2010_x86_64 --implementation cp --only-binary=:all: --upgrade --target ${var.lambda_root}/jwt_dependencies/python jwt cryptography"
+    command = "pip install --platform manylinux2014_x86_64 --implementation cp --only-binary=:all: --upgrade --target ${var.lambda_root}/jwt_dependencies/python jwt"
   }
 
   triggers = {
@@ -152,7 +152,7 @@ resource "aws_lambda_function" "lambda_function_load_pr_info" {
   timeout       = 60
   environment {
     variables = {
-      REGION = data.aws_region.current.name
+      REGION = data.aws_region.current.region
       PR_TABLE_NAME = aws_dynamodb_table.pull-requests.name
       SCRIPT_INFO_TABLE_NAME = aws_dynamodb_table.script-execution-info.name
       REPO_OWNER_NAME = var.repo_owner_name
@@ -222,7 +222,7 @@ resource "aws_lambda_function" "lambda_function_auth" {
   depends_on    = [aws_cloudwatch_log_group.lambda_auth]
   environment {
     variables = {
-      REGION = data.aws_region.current.name
+      REGION = data.aws_region.current.region
       DOMAIN_NAME = var.domain
       REPO_OWNER_NAME = var.repo_owner_name
     }
@@ -268,7 +268,7 @@ resource "aws_lambda_function" "lambda_function_user_area" {
   depends_on    = [aws_cloudwatch_log_group.lambda_user_area]
   environment {
     variables = {
-      REGION = data.aws_region.current.name
+      REGION = data.aws_region.current.region
       REPO_OWNER_NAME = var.repo_owner_name
     }
   }
@@ -349,7 +349,7 @@ resource "aws_lambda_function" "lambda_function_admin_area" {
   layers        = [aws_lambda_layer_version.jwt_layer.arn]
   environment {
     variables = {
-      REGION = data.aws_region.current.name
+      REGION = data.aws_region.current.region
       REPO_OWNER_NAME = var.repo_owner_name
     }
   }

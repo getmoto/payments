@@ -1,7 +1,7 @@
 import boto3
 import jwt
 import json
-from moto import mock_ssm
+from moto import mock_aws
 from unittest.mock import patch, Mock
 from uuid import uuid4
 
@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 
 
-@mock_ssm
+@mock_aws
 class TestAuthentication:
 
     @patch.dict("os.environ", {"REGION": "us-east-1", "REPO_OWNER_NAME": "owner/repo"})

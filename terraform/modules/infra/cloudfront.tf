@@ -19,7 +19,7 @@ resource "aws_cloudfront_distribution" "website-cloudfront" {
   }
 
   origin {
-    domain_name = "${aws_apigatewayv2_api.payments-api.id}.execute-api.${data.aws_region.current.name}.amazonaws.com"
+    domain_name = "${aws_apigatewayv2_api.payments-api.id}.execute-api.${data.aws_region.current.region}.amazonaws.com"
     origin_id   = local.apigw_origin_id
     custom_origin_config {
       http_port              = "80"
